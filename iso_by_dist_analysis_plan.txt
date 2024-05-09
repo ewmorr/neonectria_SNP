@@ -1,0 +1,6 @@
+compare
+inf dur vs distance
+gen dist vs distance
+gen dist vs inf dur
+
+potentially exclude the tanguay samples ... these were sampled only a few years after initial infection
