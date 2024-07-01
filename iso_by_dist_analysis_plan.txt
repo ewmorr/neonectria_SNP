@@ -4,3 +4,8 @@ gen dist vs distance
 gen dist vs inf dur
 
 potentially exclude the tanguay samples ... these were sampled only a few years after initial infection
+
+For compartison of Nf and Nd diversity, consider comparing genetic distance at a given geogroaphic distance, e.g., based on the modeled relationship, or at a given kernel, or just compare the slope (if both significant?)
+
+
+NOTE --- consider using the full SNP set after only applying the INFO filters (i.e., not filtering based on MAC and bialleles) to calculate diversity metrics. Why are we excluding this data, which informs the diversity analysis??

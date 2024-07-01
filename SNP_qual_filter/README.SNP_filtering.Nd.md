@@ -19,6 +19,8 @@ grep -o "\s\.:" out.filtered.PASS.vcf | wc -l
 2920386 NA sites
 2920386/66282000 = 4.41%
 
+# The depth numbers below have been updated for Nd but the above values have not
+
 #### Note that SPANDx performs variant level filtering (i.e., across samples) based on depth calibrated quality score (QD, QDFilter), root mean square mapping quality (MQ) and Fisher Strand bias (Fisher's exact test on reads supporting different base call on fwd vs rev strand [high FS is worse], QD > 10 (GATK rec is 2); MQ > 30 (GATK rec is 40); FS < 60 (GATK rec is 60). Note that QD only applies to variant calls (so does not affect invariant sites)
 #### See here for variant filtering reccomendations from Broad institute https://gatk.broadinstitute.org/hc/en-us/articles/360035890471-Hard-filtering-germline-short-variants
 #### We need to examine the effect of the SPANDx filtering and possibly perform a different filtering based on the GATK recs
@@ -33,22 +35,22 @@ genotype (ind x locus)
 2. apply depth filters either across sequencing libraries or per individual; can apply DP filters based on individual mean or library wide mean; standard approach is to apply genotype DP filters based on mean across a sample set, or in this case across the library (i.e., filter genotypes within an individual based on the lib wise mean values)
 - There are some strong library based effects on both locus DP and individual DP. Follow above, i.e., filter whole loci based on lib-wise 
 - locus DP across libraries
-# The following need to be updated based on excluding NA values (but they are basically the same either way)
+
 ```
     libOne  libTwo  libThree    libFour
-max (min is 0)   840.7727 1840.81  2335.5   2264.636
-mean    8.1    22.8   36.5  29.1
-median  6.5    21.9   36.3  28.8
-sd  8.2 20.3    33.5    24.9
+max (min is 0)   943.625 2978.222  6253   3964.214
+mean    9.3    26.8   66.0  39.4
+median  9.6    29.7   75  43.6
+sd  7.5 16.1    39.0    29.1
 ```
 --DP genotype DP filters should be applied on VCF that is split by library (as there are library depth effects), and then the split VCF recombined before performing the following missingness filtering (vcf-merge to cat samples with the same loci, vcf-concat to cat loci with the same samples [e.g., different chromosomes], must be bgzipped and tabixed)
-3. apply iterative missing data filters, e.g., the LYLF paper applies: missing inds per genotype (geno) < 50%, missing data individuals (imiss) < 90%; geno < 40%, imiss < 70%; geno < 30%, imiss < 50%; geno < 5%, imiss < 25%
+3. apply iterative missing data filters, e.g., the LYLF paper applies: geno < 50%, imiss < 90%; geno < 40%, imiss < 70%; geno < 30%, imiss < 50%; geno < 5%, imiss < 25%
 - note LYLF paper applies depth and qual based filters at genotype level (minDP 5, minQUAL 20), applies mean DP (15) and mac (3), THEN filters by iterative NA filters, then appliers INFO based filters (i.e., the GATK recs), then applies the final missingness filter. WHY? It seems that GATK hard-filtering should be applied first as these are the recommended filters for low-qual SNPs and can therefore affect missingness at both locus and individual
 
 
 ## For invariant calls set
 ### Invariant calls do not get QUAL scores (reserved for variant sites) but instead get variant level (i.e., genotype x ind) GT:DP:RGQ. RGQ is the reference genotype quality, or the Phred scaled probability the call is correct. We can therefore filter individual variants based on RGQ. 
-### RGQ = -10 x log10(p). So that RGQ = 30 is a 0.1 percent prob the call is *incorrect*, p = 0.001 == RGQ = 30, p = 0.0001 == RGQ = 40,
+### RGQ = -10 x log10(p). So that RGQ = 30 is a 1 percent prob the call is *incorrect*, p = 0.001 == RGQ = 30, p = 0.0001 == RGQ = 40,
 ### Note that this is synonymous to the site level QUAL (but at the sample level) so scaling GQ by per sample DP makes some sense, but the threshold of 2 does not seem to work well...
 
 #### For testing of RGQ and ref genotype calls we want to compare DP RGQ and whether a GT is called (i.e., not NA)
@@ -148,16 +150,6 @@ The above run with repeated calls in the iterative filtering along with individu
 
 *Note that vcftools removes data, NOT flags data as not PASS*
 
-# Final filtering strategy
-### **Update to filtering strategy above, for DIVERSITY analyses.** See Nf.filtration.sh for details on filtering strategy logic. The same strategy should be applied to Nd and Nc for comparison. Can adjust the final missingness hardfilters based on the dataset, but should try to be consistent.
-1. First filter loci based on GATK recs (SNP filters). Do NOT apply polyallelic or MAC filters
-2. apply depth/GQ filters either across sequencing libraries, max of DP=mean+2SD and min of DP=2 or GQ=30
-3. apply iterative missing data filter, 3 rounds of 95th percentile lmiss and 99th percentile imiss 
-4. Filter max of 25% missing data per locus and 15% missing data per individual (note the final hard filters are based on the ditribution of missing data and are close to the 95th and 99th percentile after the three rounds above)
-5. Depending on analysis
-    a. for genetic distance analysis, use the table as is (e.g., isolation by distance)
-    b. for nucleotide diversity metrics, use variant plus invariant sites table, apply 1. and 2 (still need to split by library and then apply the same mean+SD filtering level as assigned above, becuase the invariant sites could skew but we care most about the variants); filter based on the full list of SNP and sites derived from 3. and 4.
-    c. for phylogenetic analysis and PCA for analysis of pop structure, use the variants only table pluc MAC>=2 filter (singletons are not informative)
-    d. for population structure (e.g., STRUCTURE, ADMIXTURE) filter for MAC >=2, biallelic (assumptions of method), and LD >= 0.5 (assumptions)
+
 
 
