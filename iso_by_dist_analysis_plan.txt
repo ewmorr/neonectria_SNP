@@ -7,5 +7,14 @@ potentially exclude the tanguay samples ... these were sampled only a few years 
 
 For compartison of Nf and Nd diversity, consider comparing genetic distance at a given geogroaphic distance, e.g., based on the modeled relationship, or at a given kernel, or just compare the slope (if both significant?)
 
+Because we do not have as robust sampling of Nd, it will make sense to compute pairwise distances between individuals (e.g., see adegenet::dist https://popgen.nescent.org/2015-05-18-Dist-SNP.html)
 
-NOTE --- consider using the full SNP set after only applying the INFO filters (i.e., not filtering based on MAC and bialleles) to calculate diversity metrics. Why are we excluding this data, which informs the diversity analysis??
+NOTE --- consider using the full SNP set after only applying the INFO filters and DP/missing data filters (i.e., not filtering based on MAC and bialleles) to calculate diversity metrics. Why are we excluding this data, which informs the diversity analysis??
+
+NOTE --- we have tree level lat/lon for the copple crown mount Nd samples in neonectria_culture_db/NeoAcpe.csv
+
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+H: Competition increases pop genetic diversity 
+Test for relationship between Nd site frequency (i.e., proportion of trees present; or should we use Nf/Nd co-occurence?) and Nf pop diversity (i.e., Nei diversity)

@@ -77,7 +77,7 @@ vcftools --vcf INFOfilters.removed.recode.vcf --out lib_two --recode --keep lib_
 vcftools --vcf INFOfilters.removed.recode.vcf --out lib_three --recode --keep lib_three_ids.txt
 vcftools --vcf INFOfilters.removed.recode.vcf --out lib_four --recode --keep lib_four_ids.txt
 
-#- locus DP across libraries
+#- locus DP across libraries (Nf_variant_quality_exploratory.r)
 #    libOne  libTwo  libThree    libFour
 #max (min is 0)   840.7727 1840.81  2335.5   2264.636
 #mean    8.1    22.8   36.5  29.1
@@ -94,29 +94,11 @@ vcftools --vcf INFOfilters.removed.recode.vcf --out lib_four --recode --keep lib
 #max    24  68  109 87
 #These seem pretty arbitrary, and hopefully we can get beyond just multiplying/dividing by a random factor....
 
-#We will aplly a mean + 2*SD filter for max DP. Given that mean - 2*SD is below 0 for all libs and mean - 1*SD is 3 or below in all but one case, let's look at distribution of DP vs GQ. The SD based filters make sense for filtering out structural variants , e.g., repetitive regions with low unique mappings (Lou et al. 2021), but if we are trying to filter out low confidence calls, we could just use quality... the only problem being that is *very* common to apply minDP filters. Depending how the DP v GQ looks, maybe just filter at DP >= 3 and call it a day. *Note that we are planning to apply and RGQ filter of >= 30 so it would be consistent to filter based on GQ*
+#We will apply a mean + 2*SD filter for max DP. Given that mean - 2*SD is below 0 for all libs and mean - 1*SD is 3 or below in all but one case, let's look at distribution of DP vs GQ. The SD based filters make sense for filtering out structural variants , e.g., repetitive regions with low unique mappings (Lou et al. 2021), but if we are trying to filter out low confidence calls, we could just use quality... the only problem being that is *very* common to apply minDP filters. Depending how the DP v GQ looks, maybe just filter at DP >= 3 and call it a day. *Note that we are planning to apply and RGQ filter of >= 30 so it would be consistent to filter based on GQ*
 #let's go with a minimum DP of 2 and minimum GQ of 30. Because we are haploid we have greater confidence as well... i.e., we do not need to predict/worry about heterozygotes (Lou et al. 2021)
 #We will also pick up low confidence SNPs with percent NA filters (Lou et al. 2021)
 
-#################################################################
-#Note that these blocks don't report anything as removed because
-# it marks individual genotypes as missing, not remove whole sites/SNPs
-vcftools --vcf lib_one.recode.vcf --out temp --recode --minDP 2
-vcftools --vcf lib_two.recode.vcf --out temp --recode --minDP 2
-vcftools --vcf lib_three.recode.vcf --out temp --recode --minDP 2
-vcftools --vcf lib_four.recode.vcf --out temp --recode --minDP 2
-
-vcftools --vcf lib_one.recode.vcf --out temp --recode --minGQ 30
-vcftools --vcf lib_two.recode.vcf --out temp --recode --minGQ 30
-vcftools --vcf lib_three.recode.vcf --out temp --recode --minGQ 30
-vcftools --vcf lib_four.recode.vcf --out temp --recode --minGQ 30
-
-vcftools --vcf lib_one.recode.vcf --out temp --recode--maxDP 24
-vcftools --vcf lib_two.recode.vcf --out temp --recode --maxDP 63
-vcftools --vcf lib_three.recode.vcf --out temp --recode --maxDP 103
-vcftools --vcf lib_four.recode.vcf --out temp --recode --maxDP 78
-#################################################################
-
+#filter per lib
 vcftools --vcf lib_one.recode.vcf --out lib_one.DPGQ_filter --recode --minDP 2 --minGQ 30 --maxDP 24
 vcftools --vcf lib_two.recode.vcf --out lib_two.DPGQ_filter --recode --minDP 2 --minGQ 30 --maxDP 63
 vcftools --vcf lib_three.recode.vcf --out lib_three.DPGQ_filter --recode --minDP 2 --minGQ 30 --maxDP 103
@@ -225,7 +207,8 @@ mv out.lmiss all_libs.DPGQ_filter.lmiss
 # red lines are 95th percentile and blue are mean+2*SD
 # 
 # We will filter top 5% of loci and reassess
-# 
+#
+##The following is run iteratively with Nf.lmiss_imiss_dist.pretty_plot.r
 # ##1st pass
 
 lmiss=0.524194
@@ -559,7 +542,8 @@ mv out.lmiss NA_filter.iterative_plus_hard_filter.loc_gt_${lmiss}.ind_gt_$imiss.
 #cleanup and archive
 #
 #Final table (pass to filtering for polyalleles, MAC, LD as necessary depending on analysis)
-cp NA_filter.iterative_plus_hard_filter.loc_gt_$lmiss.ind_gt_${imiss}.recode.vcf FINAL_SNP_NA_filter.vcf
+cp NA_filter.iterative_plus_hard_filter.loc_gt_$lmiss.ind_gt_${imiss}.recode.vcf FINAL_snp.vcf
+
 #Final list of sites/indvs to filter from invairant sites tables
 cat NA.*.indv > indv_to_remove.indv
 cat NA.*.sites > sites_to_exclude.sites
@@ -588,23 +572,182 @@ rm -r filtering_intermediates_gz
 ######################################
 #Invariant sites filtration
 #
-# 1. GATK filters
-# 2. DP (based on variant site means per lib), GQ, abd RGQ filters
-# 3. remove lists of indv and sites
-# 
+# 1. GATK filters; remove all non-PASS
+# 2. split by lib and apply genotype-level DP (based on variant site means per lib), GQ, and RGQ filters
+# 3. remove lists of indv and sites from variant filtration above
+# 4. apply max 25% missing filter again (will only hit ref sites; make sure to retain alist and count number filtered)
+#
+# Note: we may want to correct/account for the number of variant/invariant sites removed by missingness filters
+# when comparing div metrics between species. Possible that there is some effect of assembly quality on the number of sites called.
+# Maybe chi-square test
+#
 # The invariants site vcf is on the server...
 
-QDparam=2
-MQparam=40
-FSparam=60
+# pull back out the lists of sites and indv for filtering
+tar -zxvf filtering_intermediates.tar.gz filtering_intermediates/NA*sites
+tar -zxvf filtering_intermediates.tar.gz filtering_intermediates/NA*indv
+#note we also made a file for NG130 which was filtered out early
 
-gatk VariantFiltration -R ref.fasta -V out.vcf -O INFOfilters.vcf \
-    --filter-name "MQ40" -filter "MQ < 40.0" \
-    --filter-name "QD2" -filter "QD < 2.0" \
-    --filter-name "FS60" -filter "FS > 60.0"
-    
+#also get list of sites filtered by INFO filters 
+tar -zxvf filtering_intermediates.tar.gz filtering_intermediates/INFOfilters.noComma.vcf
+grep -v "^#" filtering_intermediates/INFOfilters.noComma.vcf | grep -v "PASS" | cut -f 1,2 > INFO_filters.sites
 
-#remove commas from vcf INFO field descriptions before proceeding with vcftools
-# https://unix.stackexchange.com/questions/48672/only-remove-commas-embedded-within-quotes-in-a-comma-delimited-file
+wc -l filtering_intermediates/INFO_filters.sites
+#81113
 
-perl -pe 's/(".+?[^\\]")/($ret = $1) =~ (s#,##g); $ret/ge' INFOfilters.vcf > INFOfilters.noComma.vcf
+cat filtering_intermediates/*sites > all_to_filter.sites
+wc -l filtering_intermediates/all_to_filter.sites
+#287076
+#287076 - 81113 = 205963
+
+#note that we created a file with only NG130 listed, which was removed 
+# before the iterative missingness filtration bc of very high missingness
+# prior to marking sites missing for DP or GQ
+echo "NG130" > filtering_intermediates/NA.NG130.indv
+cat filtering_intermediates/*indv > all_to_filter.indv
+wc -l filtering_intermediates/all_to_filter.indv
+#8
+#
+
+#remove sites and indvs (bcftools is much faster for this than vcftools) prepending with ^ means negative filter
+bcftools view -T ^filtering_intermediates/all_to_filter.sites -S ^filtering_intermediates/all_to_filter.indv out.invariant_sites.vcf.gz | bgzip > SNPs_INFO_and_missing_filtered.invariant_sites.vcf.gz
+
+gunzip -c SNPs_INFO_and_missing_filtered.invariant_sites.vcf.gz | grep -v "^#" | wc -l
+#42335985
+gunzip -c out.invariant_sites.vcf.gz | grep -v "^#" | wc -l
+# 42623061 - 42335985 = 287076
+gunzip -c SNPs_INFO_and_missing_filtered.invariant_sites.vcf.gz | less -S
+#117 samples confirmed
+
+bcftools view SNPs_INFO_and_missing_filtered.invariant_sites.vcf.gz -Ob -o SNPs_INFO_and_missing_filtered.invariant_sites.bcf
+
+# need to filter lib ID files for the samples we have already removed
+grep -vf filtering_intermediates/all_to_filter.indv lib_one_ids.txt > lib_one_ids.filtered.txt
+grep -vf filtering_intermediates/all_to_filter.indv lib_two_ids.txt > lib_two_ids.filtered.txt
+grep -vf filtering_intermediates/all_to_filter.indv lib_three_ids.txt > lib_three_ids.filtered.txt
+grep -vf filtering_intermediates/all_to_filter.indv lib_four_ids.txt > lib_four_ids.filtered.txt
+
+#split by library before applying depth based filters
+bcftools view -S lib_one_ids.filtered.txt -Ob -o lib_one.invariant.bcf SNPs_INFO_and_missing_filtered.invariant_sites.bcf &
+bcftools view -S lib_two_ids.filtered.txt -Ob -o lib_two.invariant.bcf SNPs_INFO_and_missing_filtered.invariant_sites.bcf &
+bcftools view -S lib_three_ids.filtered.txt -Ob -o lib_three.invariant.bcf SNPs_INFO_and_missing_filtered.invariant_sites.bcf & 
+bcftools view -S lib_four_ids.filtered.txt -Ob -o lib_four.invariant.bcf SNPs_INFO_and_missing_filtered.invariant_sites.bcf &
+
+#filtering
+bcftools +setGT lib_one.invariant.bcf -Ob -o lib_one.invariant.DP-GQ_filter.bcf -- -t q -n . -i 'FMT/DP<2 | FMT/DP>24 | GQ<30 | RGQ<30' &
+bcftools +setGT lib_two.invariant.bcf -Ob -o lib_two.invariant.DP-GQ_filter.bcf -- -t q -n . -i 'FMT/DP<2 | FMT/DP>63 | GQ<30 | RGQ<30' &
+bcftools +setGT lib_three.invariant.bcf -Ob -o lib_three.invariant.DP-GQ_filter.bcf -- -t q -n . -i 'FMT/DP<2 | FMT/DP>103 | GQ<30 | RGQ<30' &
+bcftools +setGT lib_four.invariant.bcf -Ob -o lib_four.invariant.DP-GQ_filter.bcf -- -t q -n . -i 'FMT/DP<2 | FMT/DP>78 | GQ<30 | RGQ<30' &
+
+#merging
+for i in one two three four
+do(
+    bcftools index lib_${i}.invariant.DP-GQ_filter.bcf
+)
+done
+
+bcftools merge -Ob -o all_libs.invariant.DP-GQ_filtered.bcf lib_one.invariant.DP-GQ_filter.bcf lib_two.invariant.DP-GQ_filter.bcf lib_three.invariant.DP-GQ_filter.bcf lib_four.invariant.DP-GQ_filter.bcf
+
+#filter sites on missingness > 25%
+bcftools view -e 'F_MISSING>0.25' -Ob -o FINAL_invariant.bcf all_libs.invariant.DP-GQ_filtered.bcf
+
+#check number of sites removed 
+bcftools view FINAL_invariant.bcf | grep -v "^#" | wc -l
+#41026896
+bcftools view all_libs.invariant.DP-GQ_filtered.bcf | grep -v "^#" | wc -l
+# should be 42335985 methinks; it is
+# 42335985 - 41026896 = 1309089
+#
+#count hits to mt genome
+bcftools view FINAL_invariant.bcf | grep "^tig00000405_pilon"  | wc -l
+#7956 remove these
+bcftools index FINAL_invariant.bcf
+bcftools view FINAL_invariant.bcf | grep -v "^tig00000405_pilon" | bcftools view -Ob -o FINAL_invariant.nuclear.bcf
+bcftools view FINAL_invariant.nuclear.bcf | grep "^tig00000405_pilon"  | wc -l
+
+#Once the filtering is complete we can remove the filtering_intermediates folder
+rm -R filtering_intermediates
+#cleanup intermediates
+mkdir filtering_intermediates_invariant
+mv lib*bcf* filtering_intermediates_invariant
+mv all_libs*filtered.bcf filtering_intermediates_invariant
+mv SNPs_INFO* filtering_intermediates_invariant
+tar -cvf filtering_intermediates_invariant.tar filtering_intermediates_invariant
+rm -R filtering_intermediates_invariant
+
+mkdir unfiltered_vcfs
+mv out* unfiltered_vcfs
+bgzip unfiltered_vcfs/out.vcf
+tar -cvf unfiltered_vcfs.tar unfiltered_vcfs
+rm -R unfiltered_vcfs
+
+mkdir filtering_lists
+mv lib*txt filtering_lists
+mv *sites filtering_lists
+mv *indv filtering_lists
+
+#clean up final tables
+mkdir final_tables 
+mv *.bcf final_tables
+
+
+#######################
+#######################
+
+#final filters for analyses
+cd final_tables
+
+#count mt hits
+grep "^tig00000405_pilon" FINAL_snp.vcf | wc -l
+#76 remove these
+grep -v "^tig00000405_pilon" FINAL_snp.vcf > FINAL_snp.nuclear.vcf
+bcftools view -Ob -o FINAL_snp.nuclear.bcf FINAL_snp.nuclear.vcf
+
+#rm singletons for phylogenetic analysis
+# Actually this is only for MP trees, we use ML so can use the full SNP set. See R scripts
+vcftools --vcf FINAL_snp.nuclear.vcf --mac 2 --recode --out FINAL_snp.mac_ge2.phylogentic_analyses
+#kept 450016 out of a possible 1116141 Sites
+bgzip FINAL_snp.mac_ge2.no_singleton_analyses.recode.vcf
+#
+#LD filter
+bcftools +prune -m 0.5 -w 10000 -Oz -o FINAL_snp.mac_ge2.LD.pca_analyses.vcf.gz FINAL_snp.mac_ge2.phylogentic_analyses.recode.vcf.gz &
+
+#
+#bialleles & LD
+bcftools view -m2 -M2 -v snps FINAL_snp.mac_ge2.phylogentic_analyses.recode.vcf.gz | bcftools +prune -m 0.5 -w 10000 -Oz -o FINAL_snp.mac_ge2.biallele.LD.strctr_analyses.vcf.gz &
+
+#
+#bialleles
+bcftools view -m2 -M2 -v snps FINAL_snp.mac_ge2.phylogentic_analyses.recode.vcf.gz -Oz -o FINAL_snp.mac_ge2.biallele.gwas_analyses.vcf.gz &
+
+########################
+# After final filtration we filter the metadata to only the samples retained
+# 
+# metadata_collate/filter_to_retained_samples.R
+
+#there are some samples of different individuals from the same tree;
+# N149, 118 (ANF1 1); NG114, 152 (ANF1 10);
+#look at which ones have better completeness
+cd ~/repo/neonectria_SNP/data/Nf/final_tables/
+vcftools --vcf FINAL_snp.nuclear.vcf --missing-indv
+grep -E 'NG149|NG118|NG114|NG152' out.imiss
+
+#remove dups from vcfs as well
+printf 'NG149\nNG152' > ../filtering_lists/dups.txt
+mkdir rm_dups
+
+less ../filtering_lists/dups.txt
+
+for i in *vcf.gz
+do(
+    bcftools view -S ^../filtering_lists/dups.txt -Oz -o rm_dups/$i $i &
+)
+done
+
+bcftools view -S ^../filtering_lists/dups.txt -Oz -o rm_dups/FINAL_invariant.nuclear.vcf.gz FINAL_invariant.nuclear.bcf &
+bcftools view -S ^../filtering_lists/dups.txt -Oz -o rm_dups/FINAL_snp.IBD_analyses.vcf.gz FINAL_snp.nuclear.bcf &
+
+bcftools view rm_dups/FINAL_invariant.nuclear.vcf.gz | grep -v '^#' | wc -l
+#41018940
+bcftools view rm_dups/FINAL_snp.IBD_analyses.vcf.gz | grep -v '^#' | wc -l
+#1116141
