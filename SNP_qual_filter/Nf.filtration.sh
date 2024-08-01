@@ -703,28 +703,6 @@ grep "^tig00000405_pilon" FINAL_snp.vcf | wc -l
 grep -v "^tig00000405_pilon" FINAL_snp.vcf > FINAL_snp.nuclear.vcf
 bcftools view -Ob -o FINAL_snp.nuclear.bcf FINAL_snp.nuclear.vcf
 
-#rm singletons for phylogenetic analysis
-# Actually this is only for MP trees, we use ML so can use the full SNP set. See R scripts
-vcftools --vcf FINAL_snp.nuclear.vcf --mac 2 --recode --out FINAL_snp.mac_ge2.phylogentic_analyses
-#kept 450016 out of a possible 1116141 Sites
-bgzip FINAL_snp.mac_ge2.no_singleton_analyses.recode.vcf
-#
-#LD filter
-bcftools +prune -m 0.5 -w 10000 -Oz -o FINAL_snp.mac_ge2.LD.pca_analyses.vcf.gz FINAL_snp.mac_ge2.phylogentic_analyses.recode.vcf.gz &
-
-#
-#bialleles & LD
-bcftools view -m2 -M2 -v snps FINAL_snp.mac_ge2.phylogentic_analyses.recode.vcf.gz | bcftools +prune -m 0.5 -w 10000 -Oz -o FINAL_snp.mac_ge2.biallele.LD.strctr_analyses.vcf.gz &
-
-#
-#bialleles
-bcftools view -m2 -M2 -v snps FINAL_snp.mac_ge2.phylogentic_analyses.recode.vcf.gz -Oz -o FINAL_snp.mac_ge2.biallele.gwas_analyses.vcf.gz &
-
-########################
-# After final filtration we filter the metadata to only the samples retained
-# 
-# metadata_collate/filter_to_retained_samples.R
-
 #there are some samples of different individuals from the same tree;
 # N149, 118 (ANF1 1); NG114, 152 (ANF1 10);
 #look at which ones have better completeness
@@ -738,12 +716,6 @@ mkdir rm_dups
 
 less ../filtering_lists/dups.txt
 
-for i in *vcf.gz
-do(
-    bcftools view -S ^../filtering_lists/dups.txt -Oz -o rm_dups/$i $i &
-)
-done
-
 bcftools view -S ^../filtering_lists/dups.txt -Oz -o rm_dups/FINAL_invariant.nuclear.vcf.gz FINAL_invariant.nuclear.bcf &
 bcftools view -S ^../filtering_lists/dups.txt -Oz -o rm_dups/FINAL_snp.IBD_analyses.vcf.gz FINAL_snp.nuclear.bcf &
 
@@ -751,3 +723,26 @@ bcftools view rm_dups/FINAL_invariant.nuclear.vcf.gz | grep -v '^#' | wc -l
 #41018940
 bcftools view rm_dups/FINAL_snp.IBD_analyses.vcf.gz | grep -v '^#' | wc -l
 #1116141
+
+
+#rm singletons
+cd rm_dups
+vcftools --gzvcf FINAL_snp.IBD_analyses.vcf.gz --mac 2 --recode --out FINAL_snp.mac_ge2
+#kept 447150 out of a possible 1116141 Sites
+bgzip FINAL_snp.mac_ge2.recode.vcf
+#
+#LD filter
+bcftools +prune -m 0.5 -w 10000 -Oz -o FINAL_snp.mac_ge2.LD.pca_analyses.vcf.gz FINAL_snp.mac_ge2.recode.vcf.gz &
+
+#
+#bialleles & LD
+bcftools view -m2 -M2 -v snps FINAL_snp.mac_ge2.recode.vcf.gz | bcftools +prune -m 0.5 -w 10000 -Oz -o FINAL_snp.mac_ge2.biallele.LD.structure_analyses.vcf.gz &
+
+#
+#bialleles
+bcftools view -m2 -M2 -v snps FINAL_snp.mac_ge2.recode.vcf.gz -Oz -o FINAL_snp.mac_ge2.biallele.gwas_analyses.vcf.gz &
+
+########################
+# After final filtration we filter the metadata to only the samples retained
+#
+# metadata_collate/filter_to_retained_samples.R

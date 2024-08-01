@@ -4,7 +4,7 @@ library(dplyr)
 # NF
 
 #filtered VCF
-vcf <- read.vcfR("data/Nf/final_tables/FINAL_snp.mac_ge2.biallele.LD.strctr_analyses.vcf.gz", verbose = FALSE)
+vcf <- read.vcfR("data/Nf/final_tables/rm_dups/FINAL_snp.mac_ge2.biallele.LD.structure_analyses.vcf.gz", verbose = FALSE)
 
 #just pulling in dp to get sample IDs
 sample_ids <- extract.gt(vcf, element='DP', as.numeric=TRUE) %>% colnames()

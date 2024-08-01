@@ -372,30 +372,8 @@ grep -v -E '^LDPL01000025.1|^LDPL01000147.1|^LDPL01000119.1|^LDPL01000155.1|^LDP
 grep -E '^LDPL01000025.1|^LDPL01000147.1|^LDPL01000119.1|^LDPL01000155.1|^LDPL01000157.1|^LDPL01000133.1|^LDPL01000153.1|^LDPL01000084.1|^LDPL01000109.1' FINAL_snp.nuclear.vcf | wc -l
 bcftools view -Ob -o FINAL_snp.nuclear.bcf FINAL_snp.nuclear.vcf
 
-#rm singletons for phylogenetic analysis
-vcftools --vcf FINAL_snp.nuclear.vcf --mac 2 --recode --out FINAL_snp.mac_ge2.phylogentic_analyses
-#kept X out of a possible X Sites
-
-bgzip FINAL_snp.mac_ge2.phylogentic_analyses.recode.vcf
-#
-#LD filter
-bcftools +prune -m 0.5 -w 10000 -Oz -o FINAL_snp.mac_ge2.LD.pca_analyses.vcf.gz FINAL_snp.mac_ge2.no_singleton_analyses.recode.vcf.gz &
-
-#
-#bialleles & LD
-bcftools view -m2 -M2 -v snps FINAL_snp.mac_ge2.phylogentic_analyses.recode.vcf.gz | bcftools +prune -m 0.5 -w 10000 -Oz -o FINAL_snp.mac_ge2.biallele.LD.strctr_analyses.vcf.gz &
-
-#
-#bialleles
-bcftools view -m2 -M2 -v snps FINAL_snp.mac_ge2.phylogentic_analyses.recode.vcf.gz -Oz -o FINAL_snp.mac_ge2.biallele.gwas_analyses.vcf.gz &
-
-########################
-# After final filtration we filter the metadata to only the samples retained
-# 
-# metadata_collate/filter_to_retained_samples.R
-
-#there are some samples of different individuals from the same tree or the same indv sequenced twice; 
-# NG163, NG20 (MI1 1.1.1); NG27, NG144 (MI1 2); 
+#there are some samples of different individuals from the same tree or the same indv sequenced twice;
+# NG163, NG20 (MI1 1.1.1); NG27, NG144 (MI1 2);
 #look at which ones have better completeness
 cd ~/repo/neonectria_SNP/data/Nd/final_tables/
 vcftools --vcf FINAL_snp.nuclear.vcf --missing-indv
@@ -407,12 +385,6 @@ mkdir rm_dups
 
 less ../filtering_lists/dups.txt
 
-for i in *vcf.gz
-do(
-    bcftools view -S ^../filtering_lists/dups.txt -Oz -o rm_dups/$i $i &
-)
-done
-
 bcftools view -S ^../filtering_lists/dups.txt -Oz -o rm_dups/FINAL_invariant.nuclear.vcf.gz FINAL_invariant.nuclear.bcf &
 bcftools view -S ^../filtering_lists/dups.txt -Oz -o rm_dups/FINAL_snp.IBD_analyses.vcf.gz FINAL_snp.nuclear.bcf &
 bcftools view rm_dups/FINAL_invariant.nuclear.vcf.gz | grep -v '^#' | wc -l
@@ -420,3 +392,26 @@ bcftools view rm_dups/FINAL_invariant.nuclear.vcf.gz | grep -v '^#' | wc -l
 # this is kind of low... Nf is only about 1M off of the full genome size. Will want to look at calcs with the correction based on full genome size and the number of invariant sites as well
 bcftools view rm_dups/FINAL_snp.IBD_analyses.vcf.gz | grep -v '^#' | wc -l
 #1599656
+
+#rm singletons
+cd rm_dups
+vcftools --gzvcf FINAL_snp.IBD_analyses.vcf.gz --mac 2 --recode --out FINAL_snp.mac_ge2
+#kept 30 out of 30 Individuals
+# 488739 out of a possible 1599656 Sites
+bgzip FINAL_snp.mac_ge2.recode.vcf
+#
+#LD filter
+bcftools +prune -m 0.5 -w 10000 -Oz -o FINAL_snp.mac_ge2.LD.pca_analyses.vcf.gz FINAL_snp.mac_ge2.recode.vcf.gz &
+
+#
+#bialleles & LD
+bcftools view -m2 -M2 -v snps FINAL_snp.mac_ge2.recode.vcf.gz | bcftools +prune -m 0.5 -w 10000 -Oz -o FINAL_snp.mac_ge2.biallele.LD.structure_analyses.vcf.gz &
+
+#
+#bialleles
+bcftools view -m2 -M2 -v snps FINAL_snp.mac_ge2.recode.vcf.gz -Oz -o FINAL_snp.mac_ge2.biallele.gwas_analyses.vcf.gz &
+
+########################
+# After final filtration we filter the metadata to only the samples retained
+#
+# metadata_collate/filter_to_retained_samples.R
