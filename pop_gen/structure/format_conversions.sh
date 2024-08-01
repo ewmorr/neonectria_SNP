@@ -40,5 +40,5 @@ Download the params file to edit and retain a local copy if desired. The default
 Run structure_threader (started at 5/27 2p)
 ```
 cd ~/Nf_SPANDx_all_seqs_structure_th/
-sbatch ~/repo/neonectria_SNP/pop_gen/structure/structure_threader.slurm
+sbatch ~/repo/neonectria_SNP/pop_gen/structure/Nf_structure_threader.slurm
 ```
