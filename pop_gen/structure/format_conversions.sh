@@ -1,29 +1,16 @@
-#need to make "ind_file" for structure. This is an ordred list of sample names in column 1 with state names (populations) in column 2.
+#if desired can make "ind_file" for structure. This is an ordred list of sample names in column 1 with state names (populations) in column 2.
+# However, to start we are not using this info and just using the most basic format of a matrix of genotypes
 make_ind_file_structure.r
+#format conversion
+structure_format.r
 
-#upload the structure formatted vcfs to server in their respective dirs, Nf_SPANDx_all_seqs_structure_th and Nd_SPANDx_all_seqs_structure_th
+#upload the structure formatted snp file to server in their respective dirs, Nf_SPANDx_all_seqs_structure_th and Nd_SPANDx_all_seqs_structure_th
 # The ind_files are in the repo
-#Then perform format conversions with pgspider
 
 module purge
 module load linuxbrew/colsa
 cd Nf_SPANDx_all_seqs_structure_th
-cp ~
-
-#First run pgdspider with no -spid to generate template
-bcftools view FINAL_snp.mac_ge2.biallele.LD.structure_analyses.vcf.gz > FINAL_snp.mac_ge2.biallele.LD.structure_analyses.vcf
-
-pgdspider -inputfile FINAL_snp.mac_ge2.biallele.LD.structure_analyses.vcf -inputformat VCF -outputfile FINAL_snp.structure -outputformat STRUCTURE
-
-#Edits
-#- VCF_PARSER_PLOIDY_QUESTION=HAPLOID
-#- VCF_PARSER_POP_QUESTION=true
-#- VCF_PARSER_POP_FILE_QUESTION=ind_file.structure
-#- VCF_PARSER_PL_QUESTION=false
-#- STRUCTURE_WRITER_LOCI_DISTANCE_QUESTION=false
-#- STRUCTURE_WRITER_DATA_TYPE_QUESTION=SNP
-#- STRUCTURE_WRITER_FAST_FORMAT_QUESTION=false
-
+cp ~/repo/neonectria_SNP/pop_gen/structure/Nf_ind_file.structure ./ind_file.structure
 
 
 ### Running structure_threader
@@ -47,11 +34,11 @@ Download the params file to edit and retain a local copy if desired. The default
 - NUMLOCI 39849 #SNPs remaining after pgspider
 - MISSING -9
 - LABEL 1
-- POPDATA 1
+- POPDATA 0
 - MAXPOPS 15 #although this is set by -K on the command line
 
 Run structure_threader (started at 5/27 2p)
 ```
-cd ~/neonectria_genome_reseq_10072020/
-sbatch ~/repo/neonectria_genome_reseq_10072020/premise/structure_threader.slurm
+cd ~/Nf_SPANDx_all_seqs_structure_th/
+sbatch ~/repo/neonectria_SNP/pop_gen/structure/structure_threader.slurm
 ```
