@@ -8,8 +8,10 @@ gatk VariantsToTable -V FINAL_snp.IBD_analyses.vcf.gz \
     -O FINAL_snp.IBD_analyses.table \
     -F CHROM -F POS -F REF -F ALT -F TYPE -GF GT 
 
+head -n 1 FINAL_snp.IBD_analyses.table | grep -o "NG" | wc -l
 #convert NA to N for fasta conversion
 sed 's:\.:N:g' FINAL_snp.IBD_analyses.table > FINAL_snp.IBD_analyses.table.na2n
+head -n 1 FINAL_snp.IBD_analyses.table.na2n | grep -o "NGT" | wc -l
 
 #there are INDELS and "MIXED" indel/snp sites
 cut -f 5 FINAL_snp.IBD_analyses.table.na2n | sort | uniq
@@ -23,6 +25,7 @@ grep SNP FINAL_snp.IBD_analyses.table.na2n | wc -l
 #
 #We will only deal with the SNPs for the phylogeny
 grep -vE 'MIXED|INDEL' FINAL_snp.IBD_analyses.table.na2n > FINAL_snp.IBD_analyses.table.snps_only
+head -n 1 FINAL_snp.IBD_analyses.table.snps_only | grep -o "NGT" | wc -l
 
 # fasta conversion
 perl ~/repo/neonectria_SNP/library/snp_table2fasta.pl FINAL_snp.IBD_analyses.table.snps_only 5 > FINAL_snp.snps_only.for_phylogeny.fasta
@@ -34,6 +37,8 @@ gatk IndexFeatureFile --input FINAL_invariant.nuclear.vcf.gz
 gatk VariantsToTable -V FINAL_invariant.nuclear.vcf.gz \
     -O FINAL_invariant.IBD_analyses.table \
     -F CHROM -F POS -F REF -F ALT -F TYPE -GF GT
+head -n 1 FINAL_invariant.IBD_analyses.table | grep -o "NG" | wc -l
+#109 there is probably something wrong with the vcf
 
 #convert NA to N for fasta conversion
 sed 's:\.:N:g' FINAL_invariant.IBD_analyses.table > FINAL_invariant.IBD_analyses.table.na2n
@@ -52,8 +57,9 @@ grep SNP FINAL_invariant.IBD_analyses.table.na2n | wc -l
 grep -vE 'MIXED|INDEL' FINAL_invariant.IBD_analyses.table.na2n > FINAL_invariant.IBD_analyses.table.snps_only
 
 # fasta conversion
-perl ~/repo/neonectria_SNP/library/snp_table2fasta.pl FINAL_invariant.IBD_analyses.table.snps_only 5 > FINAL_invariant.snps_only.for_IBD.fasta
-sed -i '' 's/NGT//' FINAL_invariant.snps_only.for_IBD.fasta
+# the following needs to be run on a high mem. Took 350G of memory on initial run. Should fix the script
+#perl ~/repo/neonectria_SNP/library/snp_table2fasta.pl FINAL_invariant.IBD_analyses.table.snps_only 5 > FINAL_invariant.snps_only.for_IBD.fasta
+#sed -i '' 's/NGT//' FINAL_invariant.snps_only.for_IBD.fasta
 
 #Calculate ML tree in R
 ml_tree.adegenet.r
