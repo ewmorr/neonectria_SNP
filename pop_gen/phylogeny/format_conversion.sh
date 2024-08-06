@@ -38,7 +38,7 @@ gatk VariantsToTable -V FINAL_invariant.nuclear.vcf.gz \
     -O FINAL_invariant.IBD_analyses.table \
     -F CHROM -F POS -F REF -F ALT -F TYPE -GF GT
 head -n 1 FINAL_invariant.IBD_analyses.table | grep -o "NG" | wc -l
-#109 there is probably something wrong with the vcf
+#115 
 
 #convert NA to N for fasta conversion
 sed 's:\.:N:g' FINAL_invariant.IBD_analyses.table > FINAL_invariant.IBD_analyses.table.na2n
@@ -55,6 +55,27 @@ grep SNP FINAL_invariant.IBD_analyses.table.na2n | wc -l
 #
 #We will only deal with the SNPs for the phylogeny
 grep -vE 'MIXED|INDEL' FINAL_invariant.IBD_analyses.table.na2n > FINAL_invariant.IBD_analyses.table.snps_only
+
+#We need to split the table because ape::dist.dna maxes at about 2.3*10^9 bases
+# split by contig
+#note we tested and either gaps or Ns are ignored in a pairwise fashion by dist.dna
+
+cut -f 1 FINAL_invariant.IBD_analyses.table.snps_only | sort | uniq > tigs_names.txt
+mkdir invariant_table_tigs
+
+while IFS= read -r line
+do
+    grep $line FINAL_invariant.IBD_analyses.table.snps_only > invariant_table_tigs/$line.table.snps_only &
+done < tigs_names.txt
+
+cd invariant_table_tigs
+for i in tig*
+do(
+    #echo $i
+    #cat CHROM.table.snps_only $i > $i.tmp & mv $i.tmp $i
+    wc -l $i
+)
+done
 
 # fasta conversion
 # the following needs to be run on a high mem. Took 350G of memory on initial run. Should fix the script
