@@ -19,3 +19,8 @@ printlen(yBin)
 
 length(matrix(yBin[1,]))
 
+tig_lens = read.table("data/Nf/final_tables/rm_dups/invariant_table_tigs/lens_adegenet.txt")
+sum(tig_lens)
+
+tig_lens = read.table("data/Nf/final_tables/rm_dups/invariant_table_tigs_retry/lens.txt")
+sum(tig_lens$V1)

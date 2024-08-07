@@ -77,6 +77,42 @@ do(
 )
 done
 
+#the lens seem odd so retrying
+mkdir invariant_table_tigs_retry
+
+while IFS= read -r line
+do
+    grep $line FINAL_invariant.IBD_analyses.table.snps_only > invariant_table_tigs_retry/$line.table.snps_only &
+done < tig_names_1.txt
+
+while IFS= read -r line
+do
+    grep $line FINAL_invariant.IBD_analyses.table.snps_only > invariant_table_tigs_retry/$line.table.snps_only &
+done < tig_names_2.txt
+
+ grep tig00000320_pilon FINAL_invariant.IBD_analyses.table.snps_only > invariant_table_tigs_retry/tig00000320_pilon.table.snps_only 
+
+cd invariant_table_tigs_retry
+rm lens.txt
+for i in tig*only
+do(
+    #echo $i
+    #cat CHROM.table.snps_only $i > $i.tmp 
+    mv $i.tmp $i
+    wc -l $i >> lens_cat.txt
+)
+done
+# seems like the first round got messed up, maybe from overwriting or the processes crashing, it is about 6M bp too big
+# This round is the correct len
+
+# cd ..
+# rm -r invariant_table_tigs
+# mv invariant_table_tigs_retry invariant_table_tigs
+# 
+# 
+# run each tig on server `~/repo/neonectria_SNP/premise/invariant_hamming.Nf.slurm`
+# doesn't need extra high mem when run tig wise but should grab 100G to be safe (pulled in 40-50 when wewathced the first tig)
+
 # fasta conversion
 # the following needs to be run on a high mem. Took 350G of memory on initial run. Should fix the script
 #perl ~/repo/neonectria_SNP/library/snp_table2fasta.pl FINAL_invariant.IBD_analyses.table.snps_only 5 > FINAL_invariant.snps_only.for_IBD.fasta

@@ -3,7 +3,8 @@
 #SBATCH --job-name="adegenet"
 #SBATCH --output=adegenet.Nf_tigs.out
 #SBATCH --partition=shared
-#SBATCH --mem=512000
+#SBATCH --mem=150000
+#SBATCH --exclude=node105,node106,node107,node108
 
 module purge
 module load anaconda/colsa

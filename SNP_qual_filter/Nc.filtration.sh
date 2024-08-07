@@ -45,72 +45,37 @@ vcftools --vcf INFOfilters.noComma.vcf --out INFOfilters.removed --recode --remo
 
 #Calculate DP values in R before further processing
 
-#- locus DP across libraries (these have been updated to Nd from the Nf copy over)
-## from (Nd_variant_quality_exploratory.r)
+#- locus DP (these have been updated to Nd from the Nf copy over)
+## from (Nc_variant_quality_exploratory.r)
 #
-#    libOne  libTwo  libThree    libFour
-#max (min is 0)   943.625 2978.222  6253   3964.214
-#mean    9.332779    26.79611   66.00215  39.38802
-#median  9.625    29.66667   75  43.57143
-#sd  7.480772 16.13664    38.98371    29.10379
-#mean + 2*sd    24.29432    59.06939    143.9696   97.59561
-#mean - 1*sd 1.852007   10.65946 27.01844   10.28423
+#    libOne  
+#max (min is 0)   2152.4
+#mean    15.61641   
+#median  16.4
+#sd  15.58382
+#mean + 2*sd    46.78404
+#mean - 1*sd 0.0325912
 
 
 #We will aplly a mean + 2*SD filter for max DP. Given that mean - 2*SD is below 0 for all libs and mean - 1*SD is 3 or below in all but one case, let's look at distribution of DP vs GQ. The SD based filters make sense for filtering out structural variants , e.g., repetitive regions with low unique mappings (Lou et al. 2021), but if we are trying to filter out low confidence calls, we could just use quality... the only problem being that is *very* common to apply minDP filters. Depending how the DP v GQ looks, maybe just filter at DP >= 3 and call it a day. *Note that we are planning to apply and RGQ filter of >= 30 so it would be consistent to filter based on GQ*
 #let's go with a minimum DP of 2 and minimum GQ of 30. Because we are haploid we have greater confidence as well... i.e., we do not need to predict/worry about heterozygotes (Lou et al. 2021)
 #We will also pick up low confidence SNPs with percent NA filters (Lou et al. 2021)
 
-
-vcftools --vcf lib_one.recode.vcf --out lib_one.DPGQ_filter --recode --minDP 2 --minGQ 30 --maxDP 24
-vcftools --vcf lib_two.recode.vcf --out lib_two.DPGQ_filter --recode --minDP 2 --minGQ 30 --maxDP 59
-vcftools --vcf lib_three.recode.vcf --out lib_three.DPGQ_filter --recode --minDP 2 --minGQ 30 --maxDP 143
-vcftools --vcf lib_four.recode.vcf --out lib_four.DPGQ_filter --recode --minDP 2 --minGQ 30 --maxDP 97
+#we just keep the lib one prefix here to make things easier as we move forward
+vcftools --vcf INFOfilters.removed.recode.vcf --out DPGQ_filter --recode --minDP 2 --minGQ 30 --maxDP 46
 
 #count number flagged missing
-grep -v "^#" lib_one.recode.vcf | wc -l
-wc -l lib_one_ids.txt
-#1785397 * 8 = 14283176
-grep -v "^#" lib_one.recode.vcf | grep -o "\s\.:" | wc -l
-#1083904
-grep -v "^#" lib_one.DPGQ_filter.recode.vcf | grep -o "\s\.\/\.:" | wc -l
-#1451645
-#1451645-1083904 = 367741
-# 367741/14283176 = 0.02574644
-# 1451645/14283176 = 0.1016332
+grep -v "^#" INFOfilters.removed.recode.vcf | wc -l
 
-#grep -v "^#" lib_two.recode.vcf | wc -l #all have the same number of SNPs
-wc -l lib_two_ids.txt
-# 1322180*9 = 11899620
-grep -v "^#" lib_two.recode.vcf | grep -o "\s\.:" | wc -l
-#1048464
-grep -v "^#" lib_two.DPGQ_filter.recode.vcf | grep -o "\s\.\/\.:" | wc -l
-#2439573
-#2439573-1048464=1391109
-#1048464/11899620 = 0.08810903
-# 2439573/11899620 = 0.2050127
+#488725 * 5 = 2443625
+grep -v "^#" INFOfilters.removed.recode.vcf | grep -o "\s\.:" | wc -l
+#203061
+grep -v "^#" DPGQ_filter.recode.vcf | grep -o "\s\.\/\.:" | wc -l
+#268801
+#268801-203061 = 65740
+# 65740/2443625 = 0.0.02690265
+# 268801/2443625 = 0.1100009
 
-#######################
-#These figures need to be updated
-#for lib3 and 4
-wc -l lib_three_ids.txt
-#6*1322180 = 7933080
-grep -v "^#" lib_three.recode.vcf | grep -o "\s\.:" | wc -l
-#546987
-grep -v "^#" lib_three.DPGQ_filter.recode.vcf | grep -o "\s\.\/\.:" | wc -l
-#790064 - 546987 = 243077
-# 243077/7933080 = 0.03064094
-# 790064/7933080 = 0.09959108
-
-wc -l lib_four_ids.txt
-# 11*1322180 = 14543980
-grep -v "^#" lib_four.recode.vcf | grep -o "\s\.:" | wc -l
-#1014567
-grep -v "^#" lib_four.DPGQ_filter.recode.vcf | grep -o "\s\.\/\.:" | wc -l
-#1323941 - 1014567 = 309374
-# 309374/14543980 = 0.02127162
-# 1323941/14543980 = 0.09103017
-###################################
 
 #missing data filters after marking sites missing based on depth
 #iterate on the cutoff vars (lmiss == locus; imiss == individual)
@@ -119,114 +84,67 @@ grep -v "^#" lib_four.DPGQ_filter.recode.vcf | grep -o "\s\.\/\.:" | wc -l
 # individuals (imiss) < 90%; geno < 40%, imiss < 70%; geno < 30%, imiss < 50%; 
 # geno < 5%, imiss < 25%
 
-#first merge the vcfs from the four libs.
-# need to bgzip and tabix first
 
-for i in one two three four
-do(
-    bgzip lib_${i}.DPGQ_filter.recode.vcf
-    tabix lib_${i}.DPGQ_filter.recode.vcf.gz
-)
-done
-
-vcf-merge lib_one.DPGQ_filter.recode.vcf.gz \
-    lib_two.DPGQ_filter.recode.vcf.gz \
-    lib_three.DPGQ_filter.recode.vcf.gz \
-    lib_four.DPGQ_filter.recode.vcf.gz > all_libs.DPGQ_filter.recode.vcf
-    
 #get percent missing per site and indv to lok at distribution to identify
 # levels for filtering
-vcftools --vcf all_libs.DPGQ_filter.recode.vcf --missing-indv
-vcftools --vcf all_libs.DPGQ_filter.recode.vcf --missing-site
-# interesting... looking at the result of above, the lmiss values are incorrect
-# i.e., it looks like vcftools is counting ./. (that it inserted...) as two 
-# observations, whereas good calls are 1 obs (they should all be one), Try 
-# subbing . back in for ./. and recalculate
-
+# # need to sub back in . for ./.
 # Be careful because vcftools rearranges the FORMAT order, BUT GT is still the 
 # first value. If we want to do other manipulations we will need to take the
 # FORMAT order into account
-sed 's@\./\.@\.@g' all_libs.DPGQ_filter.recode.vcf > all_libs.DPGQ_filter.hap.vcf
+sed 's@\./\.@\.@g' DPGQ_filter.recode.vcf > DPGQ_filter.hap.vcf
 
-vcftools --vcf all_libs.DPGQ_filter.hap.vcf --missing-indv
-vcftools --vcf all_libs.DPGQ_filter.hap.vcf --missing-site
+vcftools --vcf DPGQ_filter.hap.vcf --missing-indv
+vcftools --vcf DPGQ_filter.hap.vcf --missing-site
 
-mv out.imiss all_libs.DPGQ_filter.imiss
-mv out.lmiss all_libs.DPGQ_filter.lmiss
+mv out.imiss DPGQ_filter.imiss
+mv out.lmiss DPGQ_filter.lmiss
 #that fixed it. The "N_data" field now has the correct number of obs, i.e., 24
-# the number of samples. The ploidy issue apparently did not effect the imiss
+# the number of samples. The ploidy issue apparently did not affect the imiss
 
 
 ###########################################
-#First pass -- there is one individual that is above 60% missingness after 
-# applying the DP and GQ filters, whereas all others are below 15%
-# let's remove this (so everything now below 15% like Nf) and then apply a 
-# single hard filter to the SNPs to 25%
-
-
-imiss=0.15
-
-awk -v var="$imiss" '$5 > var' all_libs.DPGQ_filter.imiss | cut -f1 > NA.${imiss}.indv
-tail -n +2 NA.${imiss}.indv > temp.sites && mv temp.sites NA.${imiss}.indv
-
+#First pass -- all individuals are below 15% (actually below 12%)
+# apply a single hard filter to the SNPs to 25% (so max of 1 of 5 inds missing)
 
 #somehow a comma jumped back in here. It's in the SF INFO field and looks like
 #must have been inserted by vcftools (eyeroll)
-perl -pe 's/(".+?[^\\]")/($ret = $1) =~ (s#,##g); $ret/ge' all_libs.DPGQ_filter.hap.vcf > all_libs.DPGQ_filter.hap.noComma.vcf
-
-vcftools --vcf all_libs.DPGQ_filter.hap.noComma.vcf --remove NA.${imiss}.indv --recode --out NA_filter.ind_gt_${imiss}
-
-#Recalculate missingness
-vcftools --vcf NA_filter.ind_gt_${imiss}.recode.vcf --missing-indv
-vcftools --vcf NA_filter.ind_gt_${imiss}.recode.vcf --missing-site
-
-mv out.imiss NA_filter.ind_gt_${imiss}.imiss
-mv out.lmiss NA_filter.ind_gt_${imiss}.lmiss
-
-
-# 
-# ##2nd pass
-
-#
-## ##3rd pass
+perl -pe 's/(".+?[^\\]")/($ret = $1) =~ (s#,##g); $ret/ge' DPGQ_filter.hap.vcf > DPGQ_filter.hap.noComma.vcf
 
 lmiss=0.25
 
-awk -v var="$lmiss" '$6 > var' NA_filter.ind_gt_${imiss}.lmiss | cut -f1,2 > NA.${lmiss}.sites
+awk -v var="$lmiss" '$6 > var' DPGQ_filter.lmiss | cut -f1,2 > NA.${lmiss}.sites
 tail -n +2 NA.${lmiss}.sites > temp.sites && mv temp.sites NA.${lmiss}.sites
-#removing loci with >25% missing sites (185081 loci; 1785397 total; 10.4%)
-vcftools --vcf NA_filter.ind_gt_${imiss}.recode.vcf --exclude-positions NA.${lmiss}.sites --recode --out NA_filter.loc_gt_$lmiss.ind_gt_${imiss}
+wc -l NA.${lmiss}.sites
+wc -l DPGQ_filter.lmiss
+#488725-70947 = 417778
+#70947/488725 = 0.14516
+#removing loci with >25% missing sites (70947 loci; 488725 total; 14.5%)
+vcftools --vcf DPGQ_filter.hap.noComma.vcf --exclude-positions NA.${lmiss}.sites --recode --out NA_filter.loc_gt_$lmiss
+# kept 417778 out of a possible 488725 Sites
 
 #Recalculate missingness
-vcftools --vcf NA_filter.loc_gt_$lmiss.ind_gt_${imiss}.recode.vcf --missing-indv
-vcftools --vcf NA_filter.loc_gt_$lmiss.ind_gt_${imiss}.recode.vcf --missing-site
+vcftools --vcf NA_filter.loc_gt_$lmiss.recode.vcf --missing-indv
+vcftools --vcf NA_filter.loc_gt_$lmiss.recode.vcf --missing-site
 
-mv out.imiss NA_filter.loc_gt_$lmiss.ind_gt_${imiss}.imiss
-mv out.lmiss NA_filter.loc_gt_$lmiss.ind_gt_${imiss}.lmiss
+mv out.imiss NA_filter.loc_gt_$lmiss.imiss
+mv out.lmiss NA_filter.loc_gt_$lmiss.lmiss
 
 ##########################
 #cleanup and archive
 #
 #Final table (pass to filtering for polyalleles, MAC, LD as necessary depending on analysis)
-cd ~/repo/neonectria_SNP/data/Nd
-cp NA_filter.loc_gt_0.25.ind_gt_0.15.recode.vcf FINAL_snp.vcf
+cd ~/repo/neonectria_SNP/data/Nc
+cp NA_filter.loc_gt_0.25.recode.vcf FINAL_snp.vcf
 bcftools view -Ob -o FINAL_snp.bcf FINAL_snp.vcf &
 
 #Final list of sites/indvs to filter from invairant sites tables
-cat NA.*.indv > all_to_filter.indv
+cat NA.*.indv > all_to_filter.indvx
 cat NA.*.sites > all_missing_filter.sites
 #move intermediate files and zip
 mkdir filtering_intermediates
 mv NA* filtering_intermediates
-mv lib*vcf filtering_intermediates
-ls lib*
-mv lib*log filtering_intermediates
 
-mv all_libs* filtering_intermediates
 mv INFOfilters* filtering_intermediates
-
-mkdir filtering_intermediates_gz
-mv lib*gz* filtering_intermediates_gz
 
 tar -czvf filtering_intermediates.tar.gz filtering_intermediates &
 tar -cvf filtering_intermediates_gz.tar filtering_intermediates_gz &
@@ -261,21 +179,22 @@ tar -zxvf filtering_intermediates.tar.gz filtering_intermediates/INFOfilters.noC
 grep -v "^#" filtering_intermediates/INFOfilters.noComma.vcf | grep -v "PASS" | cut -f 1,2 > INFO_filters.sites
 
 wc -l INFO_filters.sites
-#198064
+#87050
 
 cat all_missing_filter.sites INFO_filters.sites > all_to_filter.sites
 wc -l all_to_filter.sites
-#383145
-#383145 - 198064 = 185081 # the difference is the amount filtered based on missingness
+#157997
+#157997 - 87050 = 70947 # the difference is the amount filtered based on missingness
 
 
 #remove sites and indvs (bcftools is much faster for this than vcftools) prepending with ^ means negative filter
-bcftools view -T ^all_to_filter.sites -S ^all_to_filter.indv out.invariant_sites.vcf.gz | bgzip > SNPs_INFO_and_missing_filtered.invariant_sites.vcf.gz
+##there are no indv to filter so we removed `-S ^all_to_filter.indv` from the command 
+bcftools view -T ^all_to_filter.sites -Oz -o SNPs_INFO_and_missing_filtered.invariant_sites.vcf.gz out.invariant_sites.vcf.gz 
 
 gunzip -c SNPs_INFO_and_missing_filtered.invariant_sites.vcf.gz | grep -v "^#" | wc -l
-#43924891
+#42584909
 gunzip -c out.invariant_sites.vcf.gz | grep -v "^#" | wc -l
-# 44308036 - 43924891 = 383145
+# 42742906 - 42584909 = 157997
 gunzip -c SNPs_INFO_and_missing_filtered.invariant_sites.vcf.gz | less -S
 #32 samples confirmed
 
@@ -369,7 +288,7 @@ bcftools view -Ob -o FINAL_snp.nuclear.bcf FINAL_snp.nuclear.vcf
 #there are some samples of different individuals from the same tree or the same indv sequenced twice;
 # NG163, NG20 (MI1 1.1.1); NG27, NG144 (MI1 2);
 #look at which ones have better completeness
-cd ~/repo/neonectria_SNP/data/Nd/final_tables/
+cd ~/repo/neonectria_SNP/data/Nc/final_tables/
 vcftools --vcf FINAL_snp.nuclear.vcf --missing-indv
 grep -E 'NG163|NG20|NG27|NG144' out.imiss
 
