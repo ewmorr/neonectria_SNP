@@ -27,7 +27,7 @@ do(
     tigName=${i%.table.snps_only}
     echo $tigName
     
-    perl ~/repo/neonectria_SNP/library/snp_table2fasta.pl $i 5 > $tigName.fasta
-    sed -i 's/NGT//' $tigName.fasta
+    #perl ~/repo/neonectria_SNP/library/snp_table2fasta.pl $i 5 > $tigName.fasta
+    #sed -i 's/NGT//' $tigName.fasta
     Rscript ~/repo/neonectria_SNP/pop_gen/IBD/IBD.individuals.calculate_hamming.invariant.Nf.r $tigName.fasta $tigName
 )done
