@@ -195,63 +195,45 @@ gunzip -c SNPs_INFO_and_missing_filtered.invariant_sites.vcf.gz | grep -v "^#" |
 #42584909
 gunzip -c out.invariant_sites.vcf.gz | grep -v "^#" | wc -l
 # 42742906 - 42584909 = 157997
-gunzip -c SNPs_INFO_and_missing_filtered.invariant_sites.vcf.gz | less -S
-#32 samples confirmed
+gunzip -c SNPs_INFO_and_missing_filtered.invariant_sites.vcf.gz | grep -m 1 "^#CHROM" | grep -o "Neco" | wc -l
+gunzip -c SNPs_INFO_and_missing_filtered.invariant_sites.vcf.gz | grep -m 1 "^#CHROM" | less
+#5 samples confirmed
 
 bcftools view SNPs_INFO_and_missing_filtered.invariant_sites.vcf.gz -Ob -o SNPs_INFO_and_missing_filtered.invariant_sites.bcf 
 
-# need to filter lib ID files for the samples we have already removed
-grep -vf all_to_filter.indv lib_one_ids.txt > lib_one_ids.filtered.txt
-grep -vf all_to_filter.indv lib_two_ids.txt > lib_two_ids.filtered.txt
-grep -vf all_to_filter.indv lib_three_ids.txt > lib_three_ids.filtered.txt
-grep -vf all_to_filter.indv lib_four_ids.txt > lib_four_ids.filtered.txt
 
-#split by library before applying depth based filters
-bcftools view -S filtering_lists/lib_one_ids.filtered.txt -Ob -o lib_one.invariant.bcf SNPs_INFO_and_missing_filtered.invariant_sites.bcf &
-bcftools view -S filtering_lists/lib_two_ids.filtered.txt -Ob -o lib_two.invariant.bcf SNPs_INFO_and_missing_filtered.invariant_sites.bcf &
-bcftools view -S filtering_lists/lib_three_ids.filtered.txt -Ob -o lib_three.invariant.bcf SNPs_INFO_and_missing_filtered.invariant_sites.bcf & 
-bcftools view -S filtering_lists/lib_four_ids.filtered.txt -Ob -o lib_four.invariant.bcf SNPs_INFO_and_missing_filtered.invariant_sites.bcf &
-
-#filtering
-bcftools +setGT lib_one.invariant.bcf -Ob -o lib_one.invariant.DP-GQ_filter.bcf -- -t q -n . -i 'FMT/DP<2 | FMT/DP>24 | GQ<30 | RGQ<30' &
-bcftools +setGT lib_two.invariant.bcf -Ob -o lib_two.invariant.DP-GQ_filter.bcf -- -t q -n . -i 'FMT/DP<2 | FMT/DP>63 | GQ<30 | RGQ<30' &
-bcftools +setGT lib_three.invariant.bcf -Ob -o lib_three.invariant.DP-GQ_filter.bcf -- -t q -n . -i 'FMT/DP<2 | FMT/DP>103 | GQ<30 | RGQ<30' &
-bcftools +setGT lib_four.invariant.bcf -Ob -o lib_four.invariant.DP-GQ_filter.bcf -- -t q -n . -i 'FMT/DP<2 | FMT/DP>78 | GQ<30 | RGQ<30' &
-
-#merging
-for i in one two three four
-do(
-    bcftools index lib_${i}.invariant.DP-GQ_filter.bcf &
-)
-done
-
-bcftools merge -Ob -o all_libs.invariant.DP-GQ_filtered.bcf lib_one.invariant.DP-GQ_filter.bcf lib_two.invariant.DP-GQ_filter.bcf lib_three.invariant.DP-GQ_filter.bcf lib_four.invariant.DP-GQ_filter.bcf
+#filtering 
+bcftools +setGT SNPs_INFO_and_missing_filtered.invariant_sites.bcf  -Ob -o invariant.DP-GQ_filter.bcf -- -t q -n . -i 'FMT/DP<2 | FMT/DP>46 | GQ<30 | RGQ<30' &
+# Filled 1705984 alleles
 
 #filter sites on missingness > 25%
-bcftools view -e 'F_MISSING>0.25' -Ob -o FINAL_invariant.bcf all_libs.invariant.DP-GQ_filtered.bcf
+bcftools view -e 'F_MISSING>0.25' -Ob -o FINAL_invariant.bcf invariant.DP-GQ_filter.bcf
 
 #check number of sites removed 
 bcftools view -Ov FINAL_invariant.bcf | grep -v "^#" | wc -l
-#38538664
-bcftools view -Ov all_libs.invariant.DP-GQ_filtered.bcf | grep -v "^#" | wc -l
+#40653293
+bcftools view -Ov invariant.DP-GQ_filter.bcf | grep -v "^#" | wc -l
 # should be 43924891 methinks; it is
-# 43924891 - 38538664 = 5386227
+# 42584909 - 40653293 = 1931616
 #
 bcftools view -Ov FINAL_invariant.bcf | less -S
 #count hits to mt genome
-bcftools view FINAL_invariant.bcf | grep -E '^LDPL01000025.1|^LDPL01000147.1|^LDPL01000119.1|^LDPL01000155.1|^LDPL01000157.1|^LDPL01000133.1|^LDPL01000153.1|^LDPL01000084.1|^LDPL01000109.1'  | wc -l
-#3510 remove these
+bcftools view FINAL_invariant.bcf | grep -E '^WPDF01000001.1|^WPDF01000561.1|^WPDF01000528.1|^WPDF01000554.1|^WPDF01000550.1|^WPDF01000558.1|^WPDF01000445.1|^WPDF01000355.1|^WPDF01000412.1|^WPDF01000308.1|^WPDF01000568.1|^WPDF01000530.1|^WPDF01000469.1|^WPDF01000464.1|^WPDF01000448.1|^WPDF01000459.1|^WPDF01000511.1|^WPDF01000311.1'  | wc -l
+#22667 remove these
 bcftools index FINAL_invariant.bcf
-bcftools view FINAL_invariant.bcf | grep -v -E '^LDPL01000025.1|^LDPL01000147.1|^LDPL01000119.1|^LDPL01000155.1|^LDPL01000157.1|^LDPL01000133.1|^LDPL01000153.1|^LDPL01000084.1|^LDPL01000109.1' | bcftools view -Ob -o FINAL_invariant.nuclear.bcf
-bcftools view FINAL_invariant.nuclear.bcf | grep -E '^LDPL01000025.1|^LDPL01000147.1|^LDPL01000119.1|^LDPL01000155.1|^LDPL01000157.1|^LDPL01000133.1|^LDPL01000153.1|^LDPL01000084.1|^LDPL01000109.1'  | wc -l
-
+bcftools view FINAL_invariant.bcf | grep -v -E '^WPDF01000001.1|^WPDF01000561.1|^WPDF01000528.1|^WPDF01000554.1|^WPDF01000550.1|^WPDF01000558.1|^WPDF01000445.1|^WPDF01000355.1|^WPDF01000412.1|^WPDF01000308.1|^WPDF01000568.1|^WPDF01000530.1|^WPDF01000469.1|^WPDF01000464.1|^WPDF01000448.1|^WPDF01000459.1|^WPDF01000511.1|^WPDF01000311.1' | bcftools view -Ob -o FINAL_invariant.nuclear.bcf
+bcftools view FINAL_invariant.nuclear.bcf | grep -E '^WPDF01000001.1|^WPDF01000561.1|^WPDF01000528.1|^WPDF01000554.1|^WPDF01000550.1|^WPDF01000558.1|^WPDF01000445.1|^WPDF01000355.1|^WPDF01000412.1|^WPDF01000308.1|^WPDF01000568.1|^WPDF01000530.1|^WPDF01000469.1|^WPDF01000464.1|^WPDF01000448.1|^WPDF01000459.1|^WPDF01000511.1|^WPDF01000311.1'  | wc -l
+#0 (as expected)
 
 #Once the filtering is complete we can remove the filtering_intermediates folder
+mv DPGQ_filter.* filtering_intermediates
+tar -czvf filtering_intermediates.tar.gz filtering_intermediates
 rm -R filtering_intermediates
 #cleanup intermediates
 mkdir filtering_intermediates_invariant
 mv lib*bcf* filtering_intermediates_invariant
-mv all_libs*filtered.bcf filtering_intermediates_invariant
+mv *filtered.bcf filtering_intermediates_invariant
+mv *filter
 mv SNPs_INFO* filtering_intermediates_invariant
 tar -cvf filtering_intermediates_invariant.tar filtering_intermediates_invariant
 rm -R filtering_intermediates_invariant
@@ -263,9 +245,7 @@ tar -cvf unfiltered_vcfs.tar unfiltered_vcfs
 rm -R unfiltered_vcfs
 
 mkdir filtering_lists
-mv lib*txt filtering_lists
 mv *sites filtering_lists
-mv *indv filtering_lists
 
 #clean up final tables
 mkdir final_tables 
@@ -279,38 +259,26 @@ mv *.bcf final_tables
 cd final_tables
 
 #count mt hits
-grep -E '^LDPL01000025.1|^LDPL01000147.1|^LDPL01000119.1|^LDPL01000155.1|^LDPL01000157.1|^LDPL01000133.1|^LDPL01000153.1|^LDPL01000084.1|^LDPL01000109.1' FINAL_snp.vcf | wc -l
-#660 remove these
-grep -v -E '^LDPL01000025.1|^LDPL01000147.1|^LDPL01000119.1|^LDPL01000155.1|^LDPL01000157.1|^LDPL01000133.1|^LDPL01000153.1|^LDPL01000084.1|^LDPL01000109.1' FINAL_snp.vcf > FINAL_snp.nuclear.vcf
-grep -E '^LDPL01000025.1|^LDPL01000147.1|^LDPL01000119.1|^LDPL01000155.1|^LDPL01000157.1|^LDPL01000133.1|^LDPL01000153.1|^LDPL01000084.1|^LDPL01000109.1' FINAL_snp.nuclear.vcf | wc -l
+bcftools view FINAL_snp.bcf | grep -E '^WPDF01000001.1|^WPDF01000561.1|^WPDF01000528.1|^WPDF01000554.1|^WPDF01000550.1|^WPDF01000558.1|^WPDF01000445.1|^WPDF01000355.1|^WPDF01000412.1|^WPDF01000308.1|^WPDF01000568.1|^WPDF01000530.1|^WPDF01000469.1|^WPDF01000464.1|^WPDF01000448.1|^WPDF01000459.1|^WPDF01000511.1|^WPDF01000311.1'  | wc -l
+#1003 remove these
+bcftools view FINAL_snp.bcf | grep -v -E '^WPDF01000001.1|^WPDF01000561.1|^WPDF01000528.1|^WPDF01000554.1|^WPDF01000550.1|^WPDF01000558.1|^WPDF01000445.1|^WPDF01000355.1|^WPDF01000412.1|^WPDF01000308.1|^WPDF01000568.1|^WPDF01000530.1|^WPDF01000469.1|^WPDF01000464.1|^WPDF01000448.1|^WPDF01000459.1|^WPDF01000511.1|^WPDF01000311.1' > FINAL_snp.nuclear.vcf
+grep -E '^WPDF01000001.1|^WPDF01000561.1|^WPDF01000528.1|^WPDF01000554.1|^WPDF01000550.1|^WPDF01000558.1|^WPDF01000445.1|^WPDF01000355.1|^WPDF01000412.1|^WPDF01000308.1|^WPDF01000568.1|^WPDF01000530.1|^WPDF01000469.1|^WPDF01000464.1|^WPDF01000448.1|^WPDF01000459.1|^WPDF01000511.1|^WPDF01000311.1' FINAL_snp.nuclear.vcf | wc -l
+#0 (as expected)
 bcftools view -Ob -o FINAL_snp.nuclear.bcf FINAL_snp.nuclear.vcf
+bcftools view -Oz -o FINAL_snp.IBD_analyses.vcf.gz FINAL_snp.nuclear.vcf
+bcftools view -Oz -o FINAL_invariant.nuclear.vcf.gz FINAL_invariant.nuclear.bcf
 
-#there are some samples of different individuals from the same tree or the same indv sequenced twice;
-# NG163, NG20 (MI1 1.1.1); NG27, NG144 (MI1 2);
-#look at which ones have better completeness
-cd ~/repo/neonectria_SNP/data/Nc/final_tables/
-vcftools --vcf FINAL_snp.nuclear.vcf --missing-indv
-grep -E 'NG163|NG20|NG27|NG144' out.imiss
 
-#remove dups from vcfs as well
-printf 'NG20\nNG27' > ../filtering_lists/dups.txt
-mkdir rm_dups
 
-less ../filtering_lists/dups.txt
-
-bcftools view -S ^../filtering_lists/dups.txt -Oz -o rm_dups/FINAL_invariant.nuclear.vcf.gz FINAL_invariant.nuclear.bcf &
-bcftools view -S ^../filtering_lists/dups.txt -Oz -o rm_dups/FINAL_snp.IBD_analyses.vcf.gz FINAL_snp.nuclear.bcf &
-bcftools view rm_dups/FINAL_invariant.nuclear.vcf.gz | grep -v '^#' | wc -l
-#38535154
-# this is kind of low... Nf is only about 1M off of the full genome size. Will want to look at calcs with the correction based on full genome size and the number of invariant sites as well
-bcftools view rm_dups/FINAL_snp.IBD_analyses.vcf.gz | grep -v '^#' | wc -l
-#1599656
+bcftools view FINAL_invariant.nuclear.vcf.gz | grep -v '^#' | wc -l
+#40630626
+bcftools view FINAL_snp.IBD_analyses.vcf.gz | grep -v '^#' | wc -l
+#416775
 
 #rm singletons
-cd rm_dups
 vcftools --gzvcf FINAL_snp.IBD_analyses.vcf.gz --mac 2 --recode --out FINAL_snp.mac_ge2
-#kept 30 out of 30 Individuals
-# 488739 out of a possible 1599656 Sites
+#kept 5 out of 5 Individuals
+# kept 97529 out of a possible 416775 Sites
 bgzip FINAL_snp.mac_ge2.recode.vcf
 #
 #LD filter
@@ -326,5 +294,6 @@ bcftools view -m2 -M2 -v snps FINAL_snp.mac_ge2.recode.vcf.gz -Oz -o FINAL_snp.m
 
 ########################
 # After final filtration we filter the metadata to only the samples retained
+# have not done this for Nc
 #
 # metadata_collate/filter_to_retained_samples.R
