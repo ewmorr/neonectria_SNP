@@ -94,7 +94,7 @@ structure_threader params -o ~/Nc_SPANDx_all_seqs_structure_th/
 - POPDATA 0
 - MAXPOPS 4 #although this is set by -K on the command line
 
-Run structure_threader (started at 8/1/24 4:30p)
+Run structure_threader (started at 8/19/24 1:55p)
 ```
 cd ~/Nc_SPANDx_all_seqs_structure_th/
 sbatch ~/repo/neonectria_SNP/pop_gen/structure/Nc_structure_threader.slurm 
