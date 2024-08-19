@@ -72,3 +72,31 @@ cd ~/Nd_SPANDx_all_seqs_structure_th/
 sbatch ~/repo/neonectria_SNP/pop_gen/structure/Nd_structure_threader.slurm 
 ```
 
+Repeat for Nc
+```
+mkdir Nc_SPANDx_all_seqs_structure_th
+cd Nc_SPANDx_all_seqs_structure_th
+module purge
+module load anaconda/colsa
+export PATH=~/.local/bin:$PATH
+
+structure_threader params -o ~/Nc_SPANDx_all_seqs_structure_th/
+```
+#### Edits to `mainparams`
+- set
+- INFILE FINAL_snp.structure
+- OUTFILE  FINAL_snp.structure.out
+- PLOIDY to 1
+- NUMINDS 5 #after filtering out seuqncing reps and high missing data
+- NUMLOCI 2210 #SNPs remaining after pgspider
+- MISSING -9
+- LABEL 1
+- POPDATA 0
+- MAXPOPS 4 #although this is set by -K on the command line
+
+Run structure_threader (started at 8/1/24 4:30p)
+```
+cd ~/Nc_SPANDx_all_seqs_structure_th/
+sbatch ~/repo/neonectria_SNP/pop_gen/structure/Nc_structure_threader.slurm 
+```
+
