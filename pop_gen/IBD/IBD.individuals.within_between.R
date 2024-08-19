@@ -4,12 +4,15 @@ source("library/ggplot_theme.txt")
 
 dist.raw.Nf = readRDS("data/Nf/IBD/hamming_dist.rds")
 dist.raw.Nd = readRDS("data/Nd/IBD/hamming_dist.rds")
+dist.raw.Nc = readRDS("data/Nc/IBD/hamming_dist.rds")
 #get order of samples
 dist.order.Nf = as.matrix(dist.raw.Nf ) %>% rownames 
 dist.order.Nd = as.matrix(dist.raw.Nd ) %>% rownames 
+dist.order.Nc = as.matrix(dist.raw.Nc ) %>% rownames 
 
 length(dist.order.Nf)
 length(dist.order.Nd)
+length(dist.order.Nc)
 
 #metadata
 sample_metadata.Nf = read.csv("data/sample_metadata/Nf_filtered.lat_lon_dur_inf.csv")
@@ -70,8 +73,10 @@ Nd.Dgen.long$comp = ifelse(Nd.Dgeo.long$value == 0, "within", "between")
 
 #convert distances to nucelotide difs (instead of proportional) and
 # correct for genome size (see IBD.individuals.calculate_hamming for number comps)
-Nf.Dgen.long$difsPerKb = Nf.Dgen.long$value * 999132 / 42948.211 
-Nd.Dgen.long$difsPerKb = Nd.Dgen.long$value * 1413869 / 44950.817
+Nf.Dgen.long$difsPerKb = Nf.Dgen.long$value * 999132 #/ 42948.211 
+Nd.Dgen.long$difsPerKb = Nd.Dgen.long$value * 1413869 #/ 44950.817
+range(Nf.Dgen.long$difsPerKb, na.rm = T)
+range(Nd.Dgen.long$difsPerKb, na.rm = T)
 
 #counts of instances
 sum(Nf.Dgen.long$comp == "within", na.rm = T)

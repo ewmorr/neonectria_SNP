@@ -55,6 +55,17 @@ saveRDS(dist.raw.Nd, "data/Nd/IBD/hamming_dist.rds")
 rm(dnaBin.Nd)
 gc()
 
+#Nc
+dnaBin.Nc = adegenet::fasta2DNAbin(file = "data/Nc/final_tables/FINAL_snp.snps_only.for_phylogeny.fasta")
+# 378,780
+
+dist.raw.Nc = ape::dist.dna(x = dnaBin.Nc, model = "raw", pairwise.deletion = T)
+
+saveRDS(dist.raw.Nc, "data/Nc/IBD/hamming_dist.rds")
+rm(dnaBin.Nc)
+gc()
+
+
 ##########################
 ##########################
 #Then run invariants
