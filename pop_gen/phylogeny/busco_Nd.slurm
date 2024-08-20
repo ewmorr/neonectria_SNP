@@ -19,4 +19,4 @@ cd $HOME/Nf_Nd_Nc_buscos
 
 
 #busco -i $HOME/Nd_SPANDx_all_seqs/ref.fasta -o Nd --download_path /mnt/gpfs01/home/garnas/ewj4/busco_downloads --augustus -l hypocreales_odb10 -m genome -c 24 -f --offline
-busco -i $HOME/Nd_SPANDx_all_seqs/ref.fasta -l $HOME/augustus_config/lineage/sordariomyceta_odb9 -m genome -o Nf_buscos -c 1 -f
+busco -i $HOME/Nd_SPANDx_all_seqs/ref.fasta -l $HOME/augustus_config/lineage/sordariomyceta_odb9 -m genome -o Nd_buscos -c 1 -f
