@@ -13,7 +13,7 @@ export PATH=~/.local/bin:$PATH
 
 cd ~/Nc_SPANDx_all_seqs_structure_th/
 
-structure_threader run -K 4 -R 5 \
+structure_threader run -K 5 -R 5 \
 -i ~/Nc_SPANDx_all_seqs_structure_th/FINAL_snp.structure \
 -o ~/Nc_SPANDx_all_seqs_structure_th/ \
 --params ~/Nc_SPANDx_all_seqs_structure_th/mainparams \
