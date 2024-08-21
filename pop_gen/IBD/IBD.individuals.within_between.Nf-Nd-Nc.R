@@ -163,6 +163,9 @@ Nc.join_site = data.frame(
 Nc.withins.site = left_join(Nc.withins, Nc.join_site)
 Nc.within.site_n = Nc.withins.site$site %>% unique %>% length
 
+#Nf and Nd shared within site comps
+Nf_Nd_shared_sites = unique(Nd.withins.site$site)[unique(Nd.withins.site$site) %in% unique(Nf.withins.site$site)]
+
 comp.withins = rbind(Nf.withins.site, Nd.withins.site, Nc.withins.site)
 nrow(comp.withins)
 #between
@@ -173,7 +176,10 @@ Nd.betweens$spp = "Nd"
 Nc.betweens = Nc.Dgen.long[Nc.Dgen.long$comp == "between" & !is.na(Nc.Dgen.long$value),]
 Nc.betweens$spp = "Nc"
 comp.betweens = rbind(Nf.betweens, Nd.betweens, Nc.betweens)
+
 nrow(comp.betweens)
+Nf_Nd_site_within = comp.withins %>% filter(site %in%  Nf_Nd_shared_sites)
+
 
 #aov within sites
 aov.withins = aov(difsPerKb ~ spp, comp.withins)
