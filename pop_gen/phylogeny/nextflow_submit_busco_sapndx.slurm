@@ -4,6 +4,7 @@
 #SBATCH --output=nextflow.out
 #SBATCH --partition=shared
 #SBATCH --cpus-per-task=24
+#SBATCH --nodes=1
 #SBATCH --exclude=node105,node106,node107,node108,node117,node118,node119,node167
 ##SBATCH --exclude=node\[101-112,117-125\]
 ##https://premise.sr.unh.edu/slurm.html#srun-excludenode117node118-hostname
