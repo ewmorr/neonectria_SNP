@@ -40,6 +40,7 @@ perl ~/perl_scripts/get_seq_lens.pl run_Nd_buscos/single_copy_busco_sequences/EO
 
 #it looks like Augustus is outputting the CDS so there may different seqs dependent on any predicted introns. We should exclude any sequences with multiple CDS. Should we check this for all the spp? Probably yes
 # the BWA alignment should be fine predicting gaps, and we can then exclude them in the final tree calc, so just use the single CDS Nf seqs
+# BUT we check for single CD below anyways and use those
 
 while read i
 do(

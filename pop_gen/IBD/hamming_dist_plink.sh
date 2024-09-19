@@ -16,6 +16,13 @@ plink --bfile FINAL_invariant.IBD_analyses --allow-extra-chr --distance square -
 mv plink.dist FINAL_invariant.IBD_analyses.dist
 mv plink.dist.id FINAL_invariant.IBD_analyses.dist.id
 
+bcftools view FINAL_snp.mac_ge2.LD.pca_analyses.vcf.gz -Ob -o FINAL_snp.mac_ge2.LD.pca_analyses.bcf
+plink --bcf FINAL_snp.mac_ge2.LD.pca_analyses.bcf --out FINAL_snp.mac_ge2.LD.pca_analyses --allow-extra-chr --make-bed --threads 8
+plink --bfile FINAL_snp.mac_ge2.LD.pca_analyses --allow-extra-chr --distance square --threads 8
+mv plink.dist FINAL_snp.mac_ge2.LD.pca_analyses.dist
+mv plink.dist.id FINAL_snp.mac_ge2.LD.pca_analyses.dist.id
+
+
 #Nd
 cd ~/repo/neonectria_SNP/data/Nd/final_tables/rm_dups/
 
@@ -31,6 +38,12 @@ plink --bfile FINAL_invariant.IBD_analyses --allow-extra-chr --distance square -
 mv plink.dist FINAL_invariant.IBD_analyses.dist
 mv plink.dist.id FINAL_invariant.IBD_analyses.dist.id
 
+bcftools view FINAL_snp.mac_ge2.LD.pca_analyses.vcf.gz -Ob -o FINAL_snp.mac_ge2.LD.pca_analyses.bcf
+plink --bcf FINAL_snp.mac_ge2.LD.pca_analyses.bcf --out FINAL_snp.mac_ge2.LD.pca_analyses --allow-extra-chr --make-bed --threads 8
+plink --bfile FINAL_snp.mac_ge2.LD.pca_analyses --allow-extra-chr --distance square --threads 8
+mv plink.dist FINAL_snp.mac_ge2.LD.pca_analyses.dist
+mv plink.dist.id FINAL_snp.mac_ge2.LD.pca_analyses.dist.id
+
 #Nc
 cd ~/repo/neonectria_SNP/data/Nc/final_tables/
 
@@ -45,3 +58,10 @@ plink --bcf FINAL_invariant.nuclear.bcf --out FINAL_invariant.IBD_analyses --all
 plink --bfile FINAL_invariant.IBD_analyses --allow-extra-chr --distance square --threads 8
 mv plink.dist FINAL_invariant.IBD_analyses.dist
 mv plink.dist.id FINAL_invariant.IBD_analyses.dist.id
+
+bcftools view FINAL_snp.mac_ge2.LD.pca_analyses.vcf.gz -Ob -o FINAL_snp.mac_ge2.LD.pca_analyses.bcf
+plink --bcf FINAL_snp.mac_ge2.LD.pca_analyses.bcf --out FINAL_snp.mac_ge2.LD.pca_analyses --allow-extra-chr --make-bed --threads 8
+plink --bfile FINAL_snp.mac_ge2.LD.pca_analyses --allow-extra-chr --distance square --threads 8
+mv plink.dist FINAL_snp.mac_ge2.LD.pca_analyses.dist
+mv plink.dist.id FINAL_snp.mac_ge2.LD.pca_analyses.dist.id
+

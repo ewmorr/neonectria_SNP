@@ -1,5 +1,6 @@
 library(dplyr)
 library(ggplot2)
+library(geosphere)
 library(gridExtra)
 source("library/ggplot_theme.txt")
 
@@ -83,9 +84,10 @@ coords.Nd$lat[coords.Nd$collection_period == "early"] = NA
 coords.Nd$lon[coords.Nd$collection_period == "early"] = NA
 
 #calcualte geographic distance
-Nf.Dgeo <- dist(dismo::Mercator(coords.Nf[,c("lon", "lat")]))
-Nd.Dgeo <- dist(dismo::Mercator(coords.Nd[,c("lon", "lat")]))
-Nc.Dgeo <- dist(dismo::Mercator(coords.Nc[,c("lon", "lat")]))
+#old bad way #dist(dismo::Mercator(coords.Nf[,c("lon", "lat")]))
+Nf.Dgeo <- distm(x = coords.Nf[,c("lon", "lat")], fun = distVincentyEllipsoid)
+Nd.Dgeo <- distm(x = coords.Nd[,c("lon", "lat")], fun = distVincentyEllipsoid)
+Nc.Dgeo <- distm(x = coords.Nc[,c("lon", "lat")], fun = distVincentyEllipsoid)
 
 #########################
 #long format for plotting
@@ -163,24 +165,59 @@ Nc.join_site = data.frame(
 Nc.withins.site = left_join(Nc.withins, Nc.join_site)
 Nc.within.site_n = Nc.withins.site$site %>% unique %>% length
 
-#Nf and Nd shared within site comps
-Nf_Nd_shared_sites = unique(Nd.withins.site$site)[unique(Nd.withins.site$site) %in% unique(Nf.withins.site$site)]
-
+#bind the species tables
 comp.withins = rbind(Nf.withins.site, Nd.withins.site, Nc.withins.site)
 nrow(comp.withins)
+
+
 #between
 Nf.betweens = Nf.Dgen.long[Nf.Dgen.long$comp == "between" & !is.na(Nf.Dgen.long$value),]
 Nf.betweens$spp = "Nf"
+Nf.join_site1 = data.frame(
+    Var1 = sample_metadata.Nf$Sequence_label, site1 = sample_metadata.Nf$state
+)
+Nf.join_site2 = data.frame(
+    Var2 = sample_metadata.Nf$Sequence_label, site2 = sample_metadata.Nf$state
+)
+Nf.betweens.site = left_join(Nf.betweens, Nf.join_site1) %>%
+    left_join(., Nf.join_site2)
+Nf.betweens.site.n = paste(Nf.betweens.site$site1, Nf.betweens.site$site2, sep = "-") %>% 
+    unique() %>% 
+    length()
+
 Nd.betweens = Nd.Dgen.long[Nd.Dgen.long$comp == "between" & !is.na(Nd.Dgen.long$value),]
 Nd.betweens$spp = "Nd"
+Nd.join_site1 = data.frame(
+    Var1 = sample_metadata.Nd$Sequence_label, site1 = sample_metadata.Nd$state
+)
+Nd.join_site2 = data.frame(
+    Var2 = sample_metadata.Nd$Sequence_label, site2 = sample_metadata.Nd$state
+)
+Nd.betweens.site = left_join(Nd.betweens, Nd.join_site1) %>%
+    left_join(., Nd.join_site2)
+Nd.betweens.site.n = paste(Nd.betweens.site$site1, Nd.betweens.site$site2, sep = "-") %>% 
+    unique() %>% 
+    length()
+
 Nc.betweens = Nc.Dgen.long[Nc.Dgen.long$comp == "between" & !is.na(Nc.Dgen.long$value),]
 Nc.betweens$spp = "Nc"
+Nc.join_site1 = data.frame(
+    Var1 = sample_metadata.Nc$Sequence_label, site1 = sample_metadata.Nc$Canton
+)
+Nc.join_site2 = data.frame(
+    Var2 = sample_metadata.Nc$Sequence_label, site2 = sample_metadata.Nc$Canton
+)
+Nc.betweens.site = left_join(Nc.betweens, Nc.join_site1) %>%
+    left_join(., Nc.join_site2)
+Nc.betweens.site.n = paste(Nc.betweens.site$site1, Nc.betweens.site$site2, sep = "-") %>% 
+    unique() %>% 
+    length()
+
+#bind spp tables
 comp.betweens = rbind(Nf.betweens, Nd.betweens, Nc.betweens)
-
 nrow(comp.betweens)
-Nf_Nd_site_within = comp.withins %>% filter(site %in%  Nf_Nd_shared_sites)
 
-
+#################
 #aov within sites
 aov.withins = aov(difsPerKb ~ spp, comp.withins)
 qqnorm(residuals(aov.withins))
@@ -205,13 +242,15 @@ qqnorm(residuals(aov.betweens))
 plot(residuals(aov.betweens))
 summary(aov.betweens)
 TukeyHSD(aov.betweens)
-#plot
+
+#single table with all species and both comps
 Nf.Dgen.long$spp = "Nf"
 Nd.Dgen.long$spp = "Nd"
 Nc.Dgen.long$spp = "Nc"
 all.Dgen = rbind(Nf.Dgen.long, Nd.Dgen.long, Nc.Dgen.long)
 all.Dgen = all.Dgen[!is.na(all.Dgen$value),]
 
+#two-way ANOVA comparing within/between and spp
 within_between_spp.aov = aov(difsPerKb ~ comp * spp, data = all.Dgen)
 qqnorm(residuals(within_between_spp.aov))
 plot(residuals(within_between_spp.aov))
@@ -219,6 +258,77 @@ summary(within_between_spp.aov)
 TukeyHSD(within_between_spp.aov)
 
 
+#compare Nf and Nd only within the same site
+#Nf and Nd shared within site comps
+Nf_Nd_shared_sites = unique(Nd.withins.site$site)[unique(Nd.withins.site$site) %in% unique(Nf.withins.site$site)]
+Nf_Nd_site_within = comp.withins %>% filter(site %in%  Nf_Nd_shared_sites)
+Nf_Nd_site_within$site %>% unique()
+Nf_Nd_site_within.aov = aov(difsPerKb ~ site/spp, Nf_Nd_site_within)
+Nf_Nd_site_within.aov
+summary(Nf_Nd_site_within.aov)
+TukeyHSD(Nf_Nd_site_within.aov)
+
+#planned comparisons (i.e., spp within site)
+Nf_Nd_site_within.aov = aov(difsPerKb ~ spp, Nf_Nd_site_within %>% filter(site == "WV"))
+qqnorm(residuals(Nf_Nd_site_within.aov))
+plot(residuals(Nf_Nd_site_within.aov))
+summary(Nf_Nd_site_within.aov)
+Nf_Nd_site_within.aov = aov(difsPerKb ~ spp, Nf_Nd_site_within %>% filter(site == "MI"))
+qqnorm(residuals(Nf_Nd_site_within.aov))
+plot(residuals(Nf_Nd_site_within.aov))
+summary(Nf_Nd_site_within.aov)
+Nf_Nd_site_within.aov = aov(difsPerKb ~ spp, Nf_Nd_site_within %>% filter(site == "MI.UP"))
+qqnorm(residuals(Nf_Nd_site_within.aov))
+plot(residuals(Nf_Nd_site_within.aov))
+summary(Nf_Nd_site_within.aov)
+Nf_Nd_site_within.aov = aov(difsPerKb ~ spp, Nf_Nd_site_within %>% filter(site == "ME.N"))
+qqnorm(residuals(Nf_Nd_site_within.aov))
+plot(residuals(Nf_Nd_site_within.aov))
+summary(Nf_Nd_site_within.aov)
+#all sig, very low p-value
+################################
+################################
+#Bootstrap 95% CIs
+#
+head(all.Dgen)
+
+spps = all.Dgen$spp %>% unique()
+comps = all.Dgen$comp %>% unique()
+options(warn=2)
+
+boot_df = data.frame(
+    spp = rep(c("Nf", "Nd", "Nc"), 2),
+    comp = c(rep("within",3), rep("between", 3)),
+    med.boot = vector(mode = "numeric", length = 6),
+    lower.CI = vector(mode = "numeric", length = 6),
+    upper.CI = vector(mode = "numeric", length = 6)
+)
+
+for(i in spps){
+    for(j in comps){
+        temp.Dgen = all.Dgen %>% filter(spp == i & comp == j)
+        temp.Dgen[!is.na(temp.Dgen$difsPerKb),]
+        temp.boot = replicate(
+            9999, 
+            mean(
+                sample(
+                    temp.Dgen[!is.na(temp.Dgen$difsPerKb),"difsPerKb"], 
+                    replace = T
+                )
+            )
+        )
+        quants.CI = quantile(temp.boot, probs = c(0.025, 0.5, 0.975))
+        boot_df[boot_df$spp == i & boot_df$comp == j, "med.boot"] = quants.CI[2]
+        boot_df[boot_df$spp == i & boot_df$comp == j, "lower.CI"] = quants.CI[1]
+        boot_df[boot_df$spp == i & boot_df$comp == j, "upper.CI"] = quants.CI[3]
+    }
+}
+options(warn=1)
+
+################
+################
+#plots
+#
 ggplot(all.Dgen,
        aes(x = difsPerKb)
 ) +
@@ -233,10 +343,10 @@ ggplot(all.Dgen,
 # 
 #just within
 #
-n_tab = data.frame(
+n_tab.within = data.frame(
     lab = paste("n sites =", c(Nf.within.site_n, Nd.within.site_n, Nc.within.site_n)),
     spp = c("Nf", "Nd", "Nc"),
-    y = c(50, 7, 4)
+    y = c(70, 9, 5)
 )
 p1 = ggplot(all.Dgen %>% filter(comp == "within"),
        aes(x = difsPerKb)
@@ -249,7 +359,7 @@ p1 = ggplot(all.Dgen %>% filter(comp == "within"),
         scales = "free_y", 
         ncol = 1
     ) +
-    scale_x_continuous(limits = c(0,15)) +
+    coord_cartesian(xlim = c(0,15)) +
     #ggh4x::scale_y_facet(
     #    spp == "Nd", scale_y_continuous(breaks = c(0,5,10))
     #) +
@@ -263,14 +373,20 @@ p1 = ggplot(all.Dgen %>% filter(comp == "within"),
             scale_y_continuous(breaks = c(0, 3, 6))
         )
     ) +
-    geom_text(data = n_tab, x = 12, aes(y = y, label = lab)) +
+    geom_text(data = n_tab.within, x = 12.5, size = 5, hjust = 0, aes(y = y, label = lab)) +
     my_gg_theme +
-    labs(x = "Hamming distance (SNPs per Kb)", y = "Within site comparisons (count)", title = "a") +
+    labs(x = "Hamming distance (SNPs per Kb)", y = "Comparisons of individuals\nwithin sites (count)", title = "a") +
     theme(
         plot.title = element_text(hjust = -0.12)
     )
 p1
 #just between
+n_tab.between = data.frame(
+lab = paste("n site pairs =", c(Nf.betweens.site.n, Nd.betweens.site.n, Nc.betweens.site.n)),
+spp = c("Nf", "Nd", "Nc"),
+y = c(1420, 55, 6.7)
+)
+
 p2 = ggplot(all.Dgen %>% filter(comp == "between"),
        aes(x = difsPerKb)
 ) +
@@ -282,13 +398,264 @@ p2 = ggplot(all.Dgen %>% filter(comp == "between"),
         scales = "free_y", 
         ncol = 1
     ) +
-    scale_x_continuous(limits = c(0,15)) +
+    coord_cartesian(xlim = c(0,15)) +
+    geom_text(data = n_tab.between, x = -0.5, size = 5, aes(y = y, label = lab), hjust = 0) +
     my_gg_theme +
-    labs(x = "Hamming distance (SNPs per Kb)", y = "PBetween site comparisons (count)", title = "b") +
+    labs(x = "Hamming distance (SNPs per Kb)", y = "Comparisons of individuals\nbetween sites (count)", title = "b") +
     theme(
         plot.title = element_text(hjust = -0.12)
     )
+p2
 
 pdf("figures/pop_gen/IBD/within-between.pdf", width = 16, height = 7)
 grid.arrange(p1,p2, ncol = 2)
 dev.off()
+
+#plot all grid with ggh4x::facet_grid2
+
+n_tab.wnbn = data.frame(
+    lab = c(
+        paste("sites n =", c(Nf.within.site_n, Nd.within.site_n, Nc.within.site_n)),
+        paste("site pairs\nn =", c(Nf.betweens.site.n, Nd.betweens.site.n, Nc.betweens.site.n))
+    ),
+    spp = rep(c("Nf", "Nd", "Nc"), 2),
+    y = c(70, 9, 5, 1250, 49, 5.85),
+    comp = c(rep("within", 3), rep("between", 3))
+) #the y is nicely aligned between cols at 7 inch height pdf
+
+p1 = ggplot(all.Dgen, 
+       aes(x = difsPerKb)
+) +
+    geom_histogram(binwidth = 0.1) +
+    geom_text(data = n_tab.wnbn, x = c(rep(11, 3), rep(0, 3)), size = 3, aes(y = y, label = lab), hjust = 0) +
+    ggh4x::facet_grid2(
+        rows = vars(factor(
+            spp, 
+            levels = c("Nf", "Nd", "Nc")#, 
+#            labels = c("N. faginata", "N. ditissima", "N. coccinea")
+        )),
+        cols = vars(factor(
+            comp,
+            levels = c("within", "between")#,
+#            labels = c("p", "q") # for some reason this breaks when adding labels
+        )),
+        scales = "free_y", 
+        independent = "y",
+        switch = "y",
+        labeller = labeller(
+            .rows = sppNames <- c("Nf" = "N. faginata", "Nd" = "N. ditissima", "Nc" = "N. coccinea"),
+            .cols = compNames <- c("within" = "within site comparisons", "between" = "between site comparisons")
+        )
+    ) +    
+    ggh4x::facetted_pos_scales(
+        y = list(
+            scale_y_continuous(breaks = c(0, 25, 50, 75)),
+            scale_y_continuous(breaks = c(0, 500, 1000, 1500)),
+            scale_y_continuous(breaks = c(0, 4, 8)),
+            scale_y_continuous(breaks = c(0, 20, 40, 60)),
+            scale_y_continuous(breaks = c(0, 2, 4, 6)),
+            scale_y_continuous(breaks = c(0, 2, 4, 6, 8))
+        )
+    ) +
+    my_gg_theme.def_size +
+    labs(
+        x = "Hamming distance (SNPs per Kb)", 
+        y = "Pairwise comparisons of individuals (count)", 
+        title = "a"
+    ) +
+    theme(
+        plot.title = element_text(hjust = -0.125, margin = margin(b = -7.5)),
+        strip.background.x = element_blank(),
+        strip.background.y = element_blank(),
+        strip.placement = "outside"
+    )
+p1
+pdf("figures/pop_gen/IBD/within-between.grid.pdf", width = 7, height = 4)
+p1
+dev.off()
+
+
+p2 = ggplot(boot_df, 
+    aes(
+        y = med.boot, 
+        x = factor(spp,
+            levels = c("Nc", "Nd", "Nf"), 
+            labels = c("N. coccinea", "N. ditissima", "N. faginata")
+        ),
+        shape = factor(comp, levels = c("within", "between"))
+    )
+) +
+    geom_point(position = position_dodge(width = 0.9), size = 2.5) +
+    geom_errorbar(
+        aes(ymin = lower.CI, ymax = upper.CI), 
+        position = position_dodge(width = 0.9),
+        width = 0.4
+    ) +
+    scale_shape_manual(values = c(1,2)) +
+    #geom_linerange(
+    #    aes(ymin = lower.CI, ymax = upper.CI), 
+    #    position = position_dodge(width = 0.9),
+    #    linewidth = 3
+    #) +
+    my_gg_theme.def_size +
+    coord_flip() +
+    scale_y_continuous(breaks = c(0,5,10), limits = c(0,NA)) +
+    labs(
+        shape = "Site comparison", 
+        y = "Hamming distance (SNPs per Kb)",
+        title = "b"
+    ) +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.y = element_text(angle = 90, hjust = 0.5),
+        legend.position = "top", #c(0.75,0.85),
+        legend.margin = margin(0, 0, -10, 0),
+        legend.spacing.x = unit(0, "mm"),
+        legend.spacing.y = unit(0, "mm"),
+        legend.title = element_text(size = 10),
+        plot.title = element_text(hjust = -0.075, margin = margin(b = -7.5))
+    ) 
+p2
+
+
+pdf("figures/pop_gen/IBD/within-between.CIs.pdf", width = 10, height = 4)
+#p1 + p2
+grid.arrange(p1,p2,ncol = 2, widths = c(0.7,0.3))
+dev.off()
+
+##################
+##################    
+#3 panel abc fig
+#
+#pulling figs from above
+#y = c(70, 9, 5, 1250, 49, 5.85),
+
+n_tab.within = data.frame(
+    lab = paste("sites n =", c(Nf.within.site_n, Nd.within.site_n, Nc.within.site_n)),
+    spp = c("Nf", "Nd", "Nc"),
+    y = c(70, 9, 5)
+)
+p1 = ggplot(all.Dgen %>% filter(comp == "within"),
+            aes(x = difsPerKb)
+) +
+    geom_histogram(binwidth = 0.1) +
+    facet_wrap(
+        ~factor(spp, levels = c("Nf", "Nd", "Nc"), 
+                labels = c("N. faginata", "N. ditissima", "N. coccinea")
+        ),
+        scales = "free_y", 
+        ncol = 1
+    ) +
+    coord_cartesian(xlim = c(0,15)) +
+    #ggh4x::scale_y_facet(
+    #    spp == "Nd", scale_y_continuous(breaks = c(0,5,10))
+    #) +
+    ggh4x::facetted_pos_scales(
+        y = list(
+            #spp == "Nf" ~ scale_y_continuous(limits = c(0, 80)),
+            #"spp" == "Nd" ~ scale_y_continuous(breaks = c(0,5,10))
+            #spp == "Nc" ~ scale_y_continuous(trans = "reverse")
+            scale_y_continuous(breaks = c(0, 25, 50, 75)),
+            scale_y_continuous(breaks = c(0, 4, 8)),
+            scale_y_continuous(breaks = c(0, 2, 4, 6))
+        )
+    ) +
+    geom_text(data = n_tab.within, x = 11, size = 3, hjust = 0, aes(y = y, label = lab)) +
+    my_gg_theme.def_size +
+    labs(x = "", y = "Comparisons of individuals\nwithin sites (count)", title = "a") +
+    theme(
+        plot.title = element_text(hjust = -0.25),
+        strip.background = element_blank(),
+        strip.text = element_blank()
+    )
+p1
+#just between
+n_tab.between = data.frame(
+    lab = paste("site pairs\nn =", c(Nf.betweens.site.n, Nd.betweens.site.n, Nc.betweens.site.n)),
+    spp = c("Nf", "Nd", "Nc"),
+    y = c(1220, 49, 5.85)
+)
+
+p2 = ggplot(all.Dgen %>% filter(comp == "between"),
+            aes(x = difsPerKb)
+) +
+    geom_histogram(binwidth = 0.1) +
+    facet_wrap(
+        ~factor(spp, levels = c("Nf", "Nd", "Nc"), 
+                labels = c("N. faginata", "N. ditissima", "N. coccinea")
+        ),
+        scales = "free_y", 
+        ncol = 1
+    ) +
+    coord_cartesian(xlim = c(0,15)) +
+    geom_text(data = n_tab.between, x = 0, size = 3, aes(y = y, label = lab), hjust = 0) +
+    my_gg_theme.def_size +
+    labs(x = "Hamming distance (SNPs per Kb)", y = "between sites (count)", title = "b") +
+    theme(
+        plot.title = element_text(hjust = -0.25),
+        strip.background = element_blank(),
+        strip.text = element_blank()
+    )
+p2
+p3 = ggplot(boot_df, 
+            aes(
+                x = med.boot, 
+                y = factor(spp,
+                           levels = c("Nc", "Nd", "Nf"), 
+                           labels = c("N. coccinea", "N. ditissima", "N. faginata")
+                ),
+                shape = factor(comp, levels = c("within", "between"))
+            )
+) +
+    geom_point(position = position_dodge(width = 0.9), size = 2.5) +
+    geom_errorbar(
+        aes(xmin = lower.CI, xmax = upper.CI), 
+        position = position_dodge(width = 0.9),
+        width = 0.4
+    ) +
+    facet_wrap(
+        ~factor(spp, levels = c("Nf", "Nd", "Nc"), 
+                labels = c("N. faginata", "N. ditissima", "N. coccinea")
+        ),
+        scales = "free_y", 
+        strip.position = "right",
+        ncol = 1
+    ) +
+    scale_shape_manual(values = c(1,2), labels = c("within" = "within sites", "between" = "between sites")) +
+    coord_cartesian(xlim = c(0,15)) +
+    #geom_linerange(
+    #    aes(ymin = lower.CI, ymax = upper.CI), 
+    #    position = position_dodge(width = 0.9),
+    #    linewidth = 3
+    #) +
+    my_gg_theme.def_size +
+    #coord_flip() +
+    scale_x_continuous(breaks = c(0,5,10,15)) +
+    labs(
+        shape = "Site comparison", 
+        y = "Bootstrap 95% CIs",
+        x= "",
+        title = "c"
+    ) +
+    theme(
+        #axis.title.y = element_blank(),
+        #axis.text.y = element_text(angle = 90, hjust = 0.5),
+        #legend.position = c(0.75,0.85),
+        legend.position = "bottom",
+        legend.margin = margin(-26.5, 0, -2, 0),
+        legend.spacing.x = unit(0, "mm"),
+        legend.spacing.y = unit(0, "mm"),
+        legend.title = element_blank(),
+        strip.background = element_blank(),
+        strip.text = element_text(size = 10),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        plot.title = element_text(hjust = -0.12)
+    ) 
+p3
+
+pdf("figures/pop_gen/IBD/within-between.three_panel.pdf", width = 10, height = 4)
+grid.arrange(p1,p2,p3,ncol = 3)
+dev.off()
+
+
