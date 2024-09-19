@@ -12,4 +12,5 @@ module load linuxbrew/colsa
 
 cd Nf_SPANDx_all_seqs
 
-RepeatMasker -s -pa 12 -species fungi -lib ~/RepeatMaskerLib/fngrep.ref ref.fasta
+RepeatMasker -s -pa 12 -species fungi ref.fasta
+#-lib ~/RepeatMaskerLib/fngrep.ref 
