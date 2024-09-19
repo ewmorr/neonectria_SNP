@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --ntasks=1
 #SBATCH --job-name="nextflow"
-#SBATCH --output=nextflow.out
+#SBATCH --output=nextflow.neonectria.out
 #SBATCH --partition=shared
 #SBATCH --cpus-per-task=24
 #SBATCH --nodes=1
