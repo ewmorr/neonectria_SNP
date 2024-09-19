@@ -28,3 +28,5 @@ perl ../../library/collate_nucmer_coords.pl Fusgr1_AssemblyScaffolds_Repeatmaske
 
 cd
 cd repo/neonectria_SNP/data/Nf
+# note that the repeatmasking proposed in phame doesn't actually do anything for Nf
+#need to first run repeatmasker
