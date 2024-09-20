@@ -11,10 +11,10 @@ conda activate spandx
 
 #First call indv_GVCFs_array.slurm for individual vcf files
 
-out_dir=/mnt/home/garnas/ewj4/Nc_invariant_sites_GVCF
-in_dir=/mnt/home/garnas/ewj4/Nc_invariant_sites_GVCF/indv_GVCFs
+out_dir=/mnt/home/garnas/ewj4/core_fugr_invariant_sites_GVCF
+in_dir=/mnt/home/garnas/ewj4/core_fugr_invariant_sites_GVCF/indv_GVCFs
 
-reference=/mnt/home/garnas/ewj4/Nc_SPANDx_all_seqs/ref.fasta
+reference=/mnt/home/garnas/ewj4/core_genome_fugr_SPANDx/ref.fasta
 
 #SPANDx gatk configs
     CLUSTER_SNP=3
