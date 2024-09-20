@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 #Eric Morrison
 #9/18/2024
-#Usage: collate_nucmer_coords.pl [ref.genome] [coords files for pairwise collation]
-# This script requires a reference (genome) sequence and at least two files of pairwise alignment coordinates from nucmer whole genome alignment. It returns the tab delimited set of coordinates that is inclusive of all pairwise alignments with respect to the reference (tig start stop length). A fasta file (core.fastaName) with one entry per alignment named by ">reference name_start-stop" is also output. The same genome should be used as the ref in all nucemer alignments.
+#Usage: collate_nucmer_coords.pl [ref_genome.fasta] [coords files for pairwise collation]
+# This script requires a reference (genome) sequence and at least two files of pairwise alignment coordinates from nucmer whole genome alignment. It returns the tab delimited set of coordinates that is inclusive of all pairwise alignments with respect to the reference (tig start stop length). A fasta file (core.ref_genome.fasta) with one entry per alignment named by ">reference name_start-stop" is also output. The same genome should be used as the ref in all nucemer alignments.
 
 use strict;
 use warnings;
@@ -32,18 +32,13 @@ sub loop_coords{
     foreach my $tig1 (sort{$a cmp $b} keys %coord1){
         foreach my $start1 (sort{$a <=> $b} keys %{ $coord1{$tig1} } ){
             
-            #print "$tig1\t$start1\t$coord1{$tig1}{$start1}\n";
-            #print scalar @seq1, "\n";
-            
             foreach my $tig2 (sort{$a cmp $b} keys %coord2){
                 if($tig1 ne $tig2){next;}
                 foreach my $start2 (sort{$a <=> $b} keys %{ $coord2{$tig2} }){
                     if($start2 > $coord1{$tig1}{$start1} || $coord2{$tig2}{$start2} < $start1){next;} #check for complete non overlap
-                    #the above waas a huge speed up. nice.
+                    #the above was a huge speed up. nice.
                     my @seq1 = ($start1..$coord1{$tig1}{$start1});
                     my @seq2 = ($start2..$coord2{$tig2}{$start2});
-                    #print "$tig2\t$start2\t$coord2{$tig2}{$start2}\n";
-                    #print scalar @seq2, "\n";
                     
                     my($start,$stop) = compare_coords(\@seq1, \@seq2);
                     if($start ne 0){

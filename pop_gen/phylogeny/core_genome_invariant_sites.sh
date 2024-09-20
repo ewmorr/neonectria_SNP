@@ -1,0 +1,16 @@
+cd
+mkdir core_fugr_invariant_sites_GVCF
+mkdir core_fugr_invariant_sites_GVCF/indv_GVCFs
+
+sbatch ~/repo/neonectria_genome_reseq_10072020/premise/indv_GVCFs_array.slurm
+
+sbatch ~/repo/neonectria_genome_reseq_10072020/premise/genotype_gvcfs_invariant_sites.slurm
+
+cd
+mkdir core_neonectria_invariant_sites_GVCF
+mkdir core_neonectria_invariant_sites_GVCF/indv_GVCFs
+
+sbatch ~/repo/neonectria_genome_reseq_10072020/premise/indv_GVCFs_array.slurm
+
+sbatch ~/repo/neonectria_genome_reseq_10072020/premise/genotype_gvcfs_invariant_sites.slurm
+
