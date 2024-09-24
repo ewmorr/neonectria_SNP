@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --ntasks=1
-#SBATCH --job-name="nextflow"
-#SBATCH --output=nextflow.out
+#SBATCH --job-name="phame"
+#SBATCH --output=phame.out
 #SBATCH --partition=shared
 #SBATCH --cpus-per-task=24
 #SBATCH --nodes=1
