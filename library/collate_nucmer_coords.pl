@@ -29,23 +29,21 @@ sub loop_coords{
     
     my %collated;
     
-    foreach my $tig1 (sort{$a cmp $b} keys %coord1){
-        foreach my $start1 (sort{$a <=> $b} keys %{ $coord1{$tig1} } ){
+    foreach my $tig (sort{$a cmp $b} keys %coord1){
+        if(defined($coord2{$tig}) == 0){next;} # can already move to next tig if current tig doesn't exist in second coordinate hash
+        foreach my $start1 (sort{$a <=> $b} keys %{ $coord1{$tig} } ){
             
-            foreach my $tig2 (sort{$a cmp $b} keys %coord2){
-                if($tig1 ne $tig2){next;}
-                foreach my $start2 (sort{$a <=> $b} keys %{ $coord2{$tig2} }){
-                    if($start2 > $coord1{$tig1}{$start1} || $coord2{$tig2}{$start2} < $start1){next;} #check for complete non overlap
-                    #the above was a huge speed up. nice.
-                    my @seq1 = ($start1..$coord1{$tig1}{$start1});
-                    my @seq2 = ($start2..$coord2{$tig2}{$start2});
+            foreach my $start2 (sort{$a <=> $b} keys %{ $coord2{$tig} }){
+                if($start2 > $coord1{$tig}{$start1} || $coord2{$tig}{$start2} < $start1){next;} #check for complete non overlap
+                #the above was a huge speed up. nice.
+                my @seq1 = ($start1..$coord1{$tig}{$start1});
+                my @seq2 = ($start2..$coord2{$tig}{$start2});
                     
-                    my($start,$stop) = compare_coords(\@seq1, \@seq2);
-                    if($start ne 0){
-                        $collated{$tig1}{$start} = $stop;
-                        delete($coord2{$tig2}{$start2});
-                        last;
-                    }
+                my($start,$stop) = compare_coords(\@seq1, \@seq2);
+                if($start ne 0){
+                    $collated{$tig}{$start} = $stop;
+                    delete($coord2{$tig}{$start2});
+                    last;
                 }
             }
         }
