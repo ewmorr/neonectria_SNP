@@ -19,6 +19,5 @@ module load anaconda/colsa
 
 conda activate phame
 
-gunzip workdir/*fastq.gz
 phame phame.ctl
-gzip workdir/*fastq
+
