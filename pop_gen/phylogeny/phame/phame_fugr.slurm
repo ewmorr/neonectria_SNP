@@ -17,7 +17,7 @@ cd ~/fugr_neonectria_phame/
 module purge
 module load anaconda/colsa
 
-conda activate phame
+conda activate phame_new
 
 phame phame.ctl
 
