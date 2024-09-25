@@ -3,7 +3,7 @@
 #SBATCH --output=gunzip.out
 #SBATCH --partition=shared
 #SBATCH --ntasks=1 --cpus-per-task=1
-#SBATCH --array=0-49%24
+#SBATCH --array=0-12%6
 #SBATCH --exclude=node117,node118
 
 cd ~/fugr_neonectria_phame/workdir
