@@ -13,14 +13,14 @@ outDir=/mnt/home/garnas/ewj4/neonectria_all_reads_for_analysis_trimmed
 
 adapterFile=/mnt/lustre/software/anaconda/colsa/envs/qiime2-2019.4/opt/bbmap-38.57-0/resources/adapters.fa
 
-for i in $inDir/*R1*.fastq.gz
+for i in $inDir/*_1*.fastq.gz
 do
 
     file1=${i##*/}
-    sampleName=${file1%R1*}
-    postName=${file1##*R1}
+    sampleName=${file1%_1*}
+    postName=${file1##*_1}
     fwd=$file1
-    rev=${sampleName}R2${postName}
+    rev=${sampleName}_2${postName}
 
 srun bbduk.sh in=$inDir/$fwd in2=$inDir/$rev \
 out=$outDir/$fwd out2=$outDir/$rev \
