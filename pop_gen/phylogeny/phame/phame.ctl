@@ -1,4 +1,4 @@
-refdir = refdir  # directory where reference (Complete) files are located
+refdir = refdir  # directory where reference (Complete) files are located #this must be a RELATIVE path (abs path fails)
 workdir = workdir # directory where contigs/reads files are located and output is stored
 
 reference = 1  # 0:pick a random reference from refdir; 1:use given reference; 2: use ANI based reference
