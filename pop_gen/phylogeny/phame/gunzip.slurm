@@ -9,4 +9,4 @@
 cd ~/fugr_neonectria_phame/workdir
 
 array=($(find . -name "*.fastq.gz" -printf "%f "))
-gunzip {array[$SLURM_ARRAY_TASK_ID]}
+gunzip ${array[$SLURM_ARRAY_TASK_ID]}
