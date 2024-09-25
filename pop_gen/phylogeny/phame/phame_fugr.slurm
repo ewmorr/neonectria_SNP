@@ -17,7 +17,9 @@ cd ~/fugr_neonectria_phame/
 module purge
 module load anaconda/colsa
 
-conda activate phame
+conda activate phame_new
+#mamba install samtools=1.9 openssl=1.0 phame
+#the above finally worked. Many conflicts with samtools and openssl
 
 phame phame.ctl
 
