@@ -121,12 +121,24 @@ dist.Nc[is.na(Nc.Dgeo)] = NA
 
 
 mantel(dist.Nf, Nf.Dgeo, na.rm = T)
+#Mantel statistic r: 0.2465 
+#Significance: 0.001 
 mantel(dist.Nd, Nd.Dgeo, na.rm = T)
+#Mantel statistic r: -0.08981 
+#Significance: 0.782 
 mantel(dist.Nc, Nc.Dgeo, na.rm = T)
+#Mantel statistic r: 0.7574 
+#Significance: 0.05 # restricted set of permutation
 
 mantel(dist.Nf, log(Nf.Dgeo), na.rm = T)
+#Mantel statistic r: 0.2307 
+#Significance: 0.001 
 mantel(dist.Nd, log(Nd.Dgeo), na.rm = T)
+#Mantel statistic r: -0.05315 
+#Significance: 0.675 
 mantel(dist.Nc, log(Nc.Dgeo), na.rm = T)
+#Mantel statistic r: 0.7849 
+#Significance: 0.05 
 
 #rm VA from Nf and rerun
 VA_samps = sample_metadata.Nf %>% filter(state == "VA") %>% pull(Sequence_label)
@@ -185,12 +197,13 @@ cor.test(Nf.long$km, Nf.long$SNPsPerKb, na.action = na.rm)
 p1 = ggplot(Nf.long, aes(x = km, y = SNPsPerKb)) +
     geom_point(alpha = 0.08, shape = 1) +
     geom_smooth(method = "lm", linetype = 2, color = "black") +
+    scale_y_continuous(breaks = c(3,4,5)) +
     labs(x = "Geographic distance (km)", y = "Hamming distance (SNPs per Kb)", title = "a") +
     annotate(
         geom = "text", 
         label = expression(paste("Mantel r = 0.25, ", italic("P"), " = 0.001")),
         x = 1475,
-        y = 2
+        y = 2.5
     ) +
     my_gg_theme.def_size +
     theme(
@@ -215,8 +228,8 @@ p2 = ggplot(Nd.long, aes(x = km, y = SNPsPerKb)) +
     )
 
 p3 = ggplot(Nc.long, aes(x = km, y = SNPsPerKb)) +
-    geom_point(alpha = 0.2, shape = 1) +
-    geom_smooth(method = "lm") +
+    geom_point(alpha = 0.25, shape = 1) +
+    geom_smooth(method = "lm", linetype = 2, color = "black") +
     labs(x = "Geographic distance (km)", y = "Hamming distance (SNPs per Kb)", title = "c") +
     annotate(
         geom = "text", 
@@ -231,4 +244,8 @@ p3 = ggplot(Nc.long, aes(x = km, y = SNPsPerKb)) +
 
 pdf("figures/pop_gen/IBD/IBD.pdf", width = 10, height = 3.5)
 grid.arrange(p1,p2,ncol = 2)
+dev.off()
+
+pdf("figures/pop_gen/IBD/IBD_Nc.pdf", width = 6.5, height = 3.5)
+p3
 dev.off()
