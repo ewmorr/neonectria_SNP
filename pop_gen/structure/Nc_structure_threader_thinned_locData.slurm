@@ -14,7 +14,7 @@ export PATH=~/.local/bin:$PATH
 cd ~/Nc_SPANDx_all_seqs_structure_th_thin_locData/
 
 structure_threader run -K 5 -R 5 \
--i ~/Nc_SPANDx_all_seqs_structure_th_thin_locData/FINAL_snp.structure \
+-i ~/Nc_SPANDx_all_seqs_structure_th_thin_locData/FINAL_snp.thinned_no_NA.LocData.structure \
 -o ~/Nc_SPANDx_all_seqs_structure_th_thin_locData/ \
 --params ~/Nc_SPANDx_all_seqs_structure_th_thin_locData/mainparams \
 -t 24 -st /mnt/home/garnas/ewj4/.local/bin/structure
