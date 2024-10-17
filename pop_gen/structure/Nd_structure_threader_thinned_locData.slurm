@@ -11,7 +11,7 @@ module load anaconda/colsa
 
 export PATH=~/.local/bin:$PATH
 
-cd ~/Nd_SPANDx_all_seqs_structure_th/
+cd ~/Nd_SPANDx_all_seqs_structure_th_thin_locData/
 
 structure_threader run -K 9 -R 5 \
 -i ~/Nd_SPANDx_all_seqs_structure_th_thin_locData/FINAL_snp.thinned_no_NA.LocData.structure \

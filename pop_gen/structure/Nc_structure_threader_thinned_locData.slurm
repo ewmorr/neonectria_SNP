@@ -11,11 +11,11 @@ module load anaconda/colsa
 
 export PATH=~/.local/bin:$PATH
 
-cd ~/Nc_SPANDx_all_seqs_structure_th/
+cd ~/Nc_SPANDx_all_seqs_structure_th_thin_locData/
 
 structure_threader run -K 5 -R 5 \
--i ~/Nc_SPANDx_all_seqs_structure_th/FINAL_snp.structure \
--o ~/Nc_SPANDx_all_seqs_structure_th/ \
---params ~/Nc_SPANDx_all_seqs_structure_th/mainparams \
+-i ~/Nc_SPANDx_all_seqs_structure_th_thin_locData/FINAL_snp.structure \
+-o ~/Nc_SPANDx_all_seqs_structure_th_thin_locData/ \
+--params ~/Nc_SPANDx_all_seqs_structure_th_thin_locData/mainparams \
 -t 24 -st /mnt/home/garnas/ewj4/.local/bin/structure
 

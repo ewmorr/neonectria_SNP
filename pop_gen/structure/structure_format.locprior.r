@@ -93,6 +93,22 @@ write.table(gt_str.loc, "data/Nd/final_tables/rm_dups/FINAL_snp.thinned_no_NA.Lo
 vcf <- read.vcfR("data/Nc/final_tables/FINAL_snp.mac_ge2.biallele.LD.structure_analyses.vcf.gz", verbose = FALSE)
 gt <- extract.gt(vcf, element='GT', as.numeric=TRUE)
 head(gt)
+nrow(gt)
+NA_prop = rowSums(is.na(gt))/ncol(gt)
+plot(sort(NA_prop))
+
+NA_prop_df = data.frame(
+    index = 1:length(NA_prop),
+    NA_prop = NA_prop
+)
+NA_prop_df$col = ifelse(NA_prop_df$NA_prop == 0, "red", "black")
+
+no_NA_names = names(NA_prop[NA_prop == 0])
+length(no_NA_names)
+#1748
+gt.no_na = gt[row.names(gt) %in% no_NA_names,]
+nrow(gt.no_na)
+gt = gt.no_na
 gt[is.na(gt)] = -9
 head(gt)
 gt_str = t(gt)
@@ -100,7 +116,6 @@ nrow(gt_str)
 #5 individuals (for structure input options)
 n_snps = ncol(gt_str)
 n_snps
-#2210 snps  (for structure input options)
+#1748 snps  (for structure input options)
 colnames(gt_str) = paste("SNP_", seq(1, n_snps), sep = "")
 head(gt_str[,1:5])
-write.table(gt_str, "data/Nc/final_tables/FINAL_snp.structure", quote = F, sep = "\t", row.names = T, col.names = NA)
