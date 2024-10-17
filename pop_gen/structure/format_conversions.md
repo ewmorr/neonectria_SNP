@@ -1,4 +1,4 @@
-if desired can make "ind_file" for structure. This is an ordred list of sample names in column 1 with state names (populations) in column 2.
+if desired can make "ind_file" for structure_threader. This is an ordred list of sample names in column 1 with state names (populations) in column 2. Note that this ONLY rearranges the output plots from str_th. In order to use LOCRPRIOR or POPPRIOR we need to add the loc info to the input file as an integer (and change the mainparams and extraparams accordingly
  However, to start we are not using this info and just using the most basic format of a matrix of genotypes
 ```
 make_ind_file_structure.r

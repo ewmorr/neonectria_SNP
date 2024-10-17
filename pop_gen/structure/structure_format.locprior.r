@@ -1,20 +1,5 @@
 library(vcfR)
-
-# Nf
-vcf <- read.vcfR("data/Nf/final_tables/rm_dups/FINAL_snp.mac_ge2.biallele.LD.structure_analyses.vcf.gz", verbose = FALSE)
-gt <- extract.gt(vcf, element='GT', as.numeric=TRUE)
-head(gt)
-gt[is.na(gt)] = -9
-head(gt)
-gt_str = t(gt)
-nrow(gt_str)
-#115 individuals (for structure input options)
-n_snps = ncol(gt_str)
-n_snps
-#188237 snps  (for structure input options)
-colnames(gt_str) = paste("SNP_", seq(1, n_snps), sep = "")
-head(gt_str[,1:5])
-write.table(gt_str, "data/Nf/final_tables/rm_dups/FINAL_snp.structure", quote = F, sep = "\t", row.names = T, col.names = NA)
+library(dplyr)
 
 #thinned Nf
 vcf <- read.vcfR("data/Nf/final_tables/rm_dups/FINAL_snp.mac_ge2.biallele.LD.structure_analyses.vcf.gz", verbose = FALSE)
@@ -29,17 +14,6 @@ NA_prop_df = data.frame(
     NA_prop = NA_prop
 )
 NA_prop_df$col = ifelse(NA_prop_df$NA_prop == 0, "red", "black")
-library(ggplot2)
-p1 = ggplot(NA_prop_df, aes(x = index, y = NA_prop*100, color = col, alpha = col)) +
-    geom_point(shape = 1) +
-    scale_color_manual(values = c("red" = "red", "black" = "black")) +
-    scale_alpha_manual(values = c("red" = 0.25, "black" = 0.25)) +
-    guides(colour="none",alpha="none") +
-    labs(y = "SNP % NA",x="SNP index") +
-    theme_bw()
-pdf("figures/pop_gen/structure/Nf_index_of_thinned_SNPs.pdf", width = 7, height = 3.5)
-p1
-dev.off()
 
 no_NA_names = names(NA_prop[NA_prop == 0])
 length(no_NA_names)
@@ -57,8 +31,18 @@ n_snps
 #20465 snps  (for structure input options)
 colnames(gt_str) = paste("SNP_", seq(1, n_snps), sep = "")
 head(gt_str[,1:5])
-write.table(gt_str, "data/Nf/final_tables/rm_dups/FINAL_snp.thinned_no_NA.structure", quote = F, sep = "\t", row.names = T, col.names = NA)
 
+#adding the loc info
+sample_ids = row.names(gt_str)
+metadata = read.csv("data/sample_metadata/Nf_filtered.lat_lon_dur_inf.csv")
+loc_data = left_join(data.frame(Sequence_label = sample_ids), metadata %>% dplyr::select(Sequence_label, state) )
+loc_int = data.frame(state = unique(loc_data$state), int = 1:length(unique(loc_data$state)))
+loc_data.int = left_join(loc_data, loc_int, by = "state")
+gt_str.loc = data.frame(LocData = loc_data.int$int, gt_str)
+gt_str.loc[,1:5] %>% head
+
+write.table(gt_str.loc, "data/Nf/final_tables/rm_dups/FINAL_snp.thinned_no_NA.LocData.structure", quote = F, sep = "\t", row.names = T, col.names = NA)
+#subsequently delete the LocData colname manually or with sed
 
 # Nd
 vcf <- read.vcfR("data/Nd/final_tables/rm_dups/FINAL_snp.mac_ge2.biallele.LD.structure_analyses.vcf.gz", verbose = FALSE)

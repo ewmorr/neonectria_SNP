@@ -86,46 +86,6 @@ p1 = ggplot(Nf.K_df %>% filter(collection_period == "modern" & K <= K_number),
     )
 p1
 
-#k4 with state grouping 
-#
-Nf.K_df$facet_by_state = paste0(Nf.K_df$state, "--",Nf.K_df$duration_infection, " yrs")
-Nf.K_df[Nf.K_df$state %in% c("NB.LUD", "NB.RB"), "facet_by_state"] = "NB 1963 collection" # we lump the NB early collections
-
-Nf.K_df %>% select(state, duration_infection) %>% unique() %>% print(n = Inf)
-Nf.K_df %>% select(state, duration_infection, collection_period) %>% unique() %>% print(n = Inf)
-
-Nf.unique_collections = Nf.K_df %>% select(duration_infection, collection_period, facet_by_state) %>% unique() 
-
-state_order = Nf.unique_collections[with(Nf.unique_collections, order(collection_period, duration_infection)) , ] %>% pull(facet_by_state) 
-
-
-
-
-p1.mod = ggplot(Nf.K_df %>% filter(K == 4), 
-aes(
-    x = Sequence_label, 
-    y = Q, 
-    fill = ancestor
-)
-) +
-    geom_bar(stat = "identity") +
-    facet_wrap(~factor(facet_by_state, levels = rev(state_order)), scales = "free_x", ncol = 7) + 
-    scale_fill_brewer(palette = "Set1", guide = "none") +
-    my_gg_theme.def_size +
-    labs(
-        x = "Individuals (unique sites in different facets ordered by infestation duration)",
-        y = "Ancestry (K = 4)"
-    ) +
-    theme(
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        strip.background = element_blank(),
-        strip.placement = "outside"
-    )
-    
-
-    
 p2 = ggplot(Nd.K_df %>% filter(collection_period == "modern" & K <= K_number), 
             aes(
                 x = factor(Sequence_label, levels = Nd.try_order), 
@@ -162,6 +122,88 @@ pdf("figures/pop_gen/admixture/admixture.pdf", width = 18, height = 7)
 grid.arrange(p1,p2, widths = c(0.8, 0.2))
 dev.off()
 
+#k4 with state grouping 
+#
+Nf.K_df$facet_by_state = paste0(Nf.K_df$state, "--",Nf.K_df$duration_infection, " yrs")
+Nf.K_df[Nf.K_df$state %in% c("NB.LUD", "NB.RB"), "facet_by_state"] = "NB 1963 collection" # we lump the NB early collections
+
+Nf.K_df %>% select(state, duration_infection) %>% unique() %>% print(n = Inf)
+Nf.K_df %>% select(state, duration_infection, collection_period) %>% unique() %>% print(n = Inf)
+
+Nf.unique_collections = Nf.K_df %>% select(duration_infection, collection_period, facet_by_state) %>% unique() 
+
+state_order = Nf.unique_collections[with(Nf.unique_collections, order(collection_period, duration_infection)) , ] %>% pull(facet_by_state) 
+
+p1.mod = ggplot(Nf.K_df %>% filter(K == 4), 
+aes(
+    x = Sequence_label, 
+    y = Q, 
+    fill = ancestor
+)
+) +
+    geom_bar(stat = "identity") +
+    facet_wrap(~factor(facet_by_state, levels = rev(state_order)), scales = "free_x", ncol = 7) + 
+    scale_fill_brewer(palette = "Set1", guide = "none") +
+    my_gg_theme.def_size +
+    labs(
+        x = "Individuals (unique sites in different facets ordered by infestation duration)",
+        y = "Ancestry (K = 4)"
+    ) +
+    theme(
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        strip.background = element_blank(),
+        strip.placement = "outside"
+    )
+p1.mod
+
+#Nd
+Nd.K_df$facet_by_state = paste0(Nd.K_df$state, "--",Nd.K_df$duration_infection, " yrs")
+Nd.K_df %>% group_by(facet_by_state, collection_period, state) %>% summarize(n = n())
+#NB.NE -- 1964
+#QC.C -- 1959
+#QC.E -- 1965
+
+Nd.K_df[Nd.K_df$state %in% c("NB.NE", "QC.C", "QC.E") & Nd.K_df$collection_period == "early", "facet_by_state"] = "NB/QC 1959-1965" # we lump the early collections
+
+Nd.K_df %>% select(state, duration_infection) %>% unique() %>% print(n = Inf)
+Nd.K_df %>% select(state, duration_infection, collection_period) %>% unique() %>% print(n = Inf)
+
+Nd.unique_collections = Nd.K_df %>% select(duration_infection, collection_period, facet_by_state) %>% unique() 
+
+state_order = Nd.unique_collections[with(Nd.unique_collections, order(collection_period, duration_infection)) , ] %>% pull(facet_by_state) %>% unique
+
+p2.mod = ggplot(Nd.K_df %>% filter(K == 5), 
+                aes(
+                    x = Sequence_label, 
+                    y = Q, 
+                    fill = ancestor
+                )
+) +
+    geom_bar(stat = "identity") +
+    facet_wrap(~factor(facet_by_state, levels = rev(state_order)), scales = "free_x", ncol = 8) + 
+    scale_fill_brewer(palette = "Set1", guide = "none") +
+    my_gg_theme.def_size +
+    labs(
+        x = "Individuals (unique sites in different facets ordered by infestation duration)",
+        y = "Ancestry (K = 5)"
+    ) +
+    theme(
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        strip.background = element_blank(),
+        strip.placement = "outside"
+    )
+p2.mod
+
+    
+
 pdf("figures/pop_gen/admixture/Nf.admixture.site_facets.pdf", width = 10, height = 5)
 p1.mod
+dev.off()
+
+pdf("figures/pop_gen/admixture/Nd.admixture.site_facets.pdf", width = 10, height = 5)
+p2.mod
 dev.off()

@@ -91,14 +91,23 @@ Nc.Dgeo <- distm(x = coords.Nc[,c("lon", "lat")], fun = distVincentyEllipsoid)
 
 #########################
 #long format for plotting
-Nf.Dgeo.long = reshape2::melt(Nf.Dgeo %>% as.matrix)
+#we need to first NA the upper triangle of the matrix to avoid repeat comps
+#just do this here and use these to set NAs in the gen dist mat
+Nf.mat = as.matrix(Nf.Dgeo)
+Nf.mat[upper.tri(Nf.mat, diag=T)] = NA
+Nf.Dgeo.long = reshape2::melt(Nf.mat)
 Nf.Dgeo.long %>% filter(Var1 == "NG2" & Var2 == "NG1") %>% nrow
-Nd.Dgeo.long = reshape2::melt(Nd.Dgeo %>% as.matrix)
-Nc.Dgeo.long = reshape2::melt(Nc.Dgeo %>% as.matrix)
+Nd.mat = as.matrix(Nd.Dgeo)
+Nd.mat[upper.tri(Nd.mat, diag=T)] = NA
+Nd.Dgeo.long = reshape2::melt(Nd.mat)
+Nc.mat = as.matrix(Nc.Dgeo)
+Nc.mat[upper.tri(Nc.mat, diag=T)] = NA
+Nc.Dgeo.long = reshape2::melt(Nc.mat)
 #Need to set self comps to NA
-Nf.Dgeo.long[Nf.Dgeo.long$Var1 == Nf.Dgeo.long$Var2, "value"] = NA
-Nd.Dgeo.long[Nd.Dgeo.long$Var1 == Nd.Dgeo.long$Var2, "value"] = NA
-Nc.Dgeo.long[Nc.Dgeo.long$Var1 == Nc.Dgeo.long$Var2, "value"] = NA
+##don't need this anymore bc did it in the matrix convert above
+#Nf.Dgeo.long[Nf.Dgeo.long$Var1 == Nf.Dgeo.long$Var2, "value"] = NA
+#Nd.Dgeo.long[Nd.Dgeo.long$Var1 == Nd.Dgeo.long$Var2, "value"] = NA
+#Nc.Dgeo.long[Nc.Dgeo.long$Var1 == Nc.Dgeo.long$Var2, "value"] = NA
 
 #set gen dists to NA where geo dist == NA
 Nf.Dgen.long = reshape2::melt(dist.Nf %>% as.matrix)
@@ -108,6 +117,17 @@ Nc.Dgen.long = reshape2::melt(dist.Nc %>% as.matrix)
 Nf.Dgen.long[is.na(Nf.Dgeo.long$value), "value"] = NA
 Nd.Dgen.long[is.na(Nd.Dgeo.long$value), "value"] = NA
 Nc.Dgen.long[is.na(Nc.Dgeo.long$value), "value"] = NA
+
+#now remove NA values from everything
+Nf.Dgeo.long = Nf.Dgeo.long[!is.na(Nf.Dgeo.long$value),]
+Nd.Dgeo.long = Nd.Dgeo.long[!is.na(Nd.Dgeo.long$value),]
+Nc.Dgeo.long = Nc.Dgeo.long[!is.na(Nc.Dgeo.long$value),]
+Nf.Dgen.long = Nf.Dgen.long[!is.na(Nf.Dgen.long$value),]
+Nd.Dgen.long = Nd.Dgen.long[!is.na(Nd.Dgen.long$value),]
+Nc.Dgen.long = Nc.Dgen.long[!is.na(Nc.Dgen.long$value),]
+
+nrow(Nf.Dgeo.long)
+nrow(Nf.Dgen.long)
 
 #create within between cats
 Nf.Dgen.long$comp = ifelse(Nf.Dgeo.long$value == 0, "within", "between")
@@ -127,18 +147,18 @@ Nc.Dgen.long$difsPerKb = Nc.Dgen.long$value / (40630626 / 1000)
 
 #counts of instances
 sum(Nf.Dgen.long$comp == "within", na.rm = T)
-#682
+#341
 sum(Nf.Dgen.long$comp == "between", na.rm = T)
-#11974
+#5987
 sum(Nd.Dgen.long$comp == "within", na.rm = T)
-#40
+#20
 sum(Nd.Dgen.long$comp == "between", na.rm = T)
-#560
+#280
 Nc.Dgen.long[Nc.Dgen.long$comp == "within",]
 sum(Nc.Dgen.long$comp == "within", na.rm = T)
-#6
+#3
 sum(Nc.Dgen.long$comp == "between", na.rm = T)
-#14
+#7
 
 #dfs for anova
 #within
@@ -273,19 +293,23 @@ Nf_Nd_site_within.aov = aov(difsPerKb ~ spp, Nf_Nd_site_within %>% filter(site =
 qqnorm(residuals(Nf_Nd_site_within.aov))
 plot(residuals(Nf_Nd_site_within.aov))
 summary(Nf_Nd_site_within.aov)
+#0.000161 ***
 Nf_Nd_site_within.aov = aov(difsPerKb ~ spp, Nf_Nd_site_within %>% filter(site == "MI"))
 qqnorm(residuals(Nf_Nd_site_within.aov))
 plot(residuals(Nf_Nd_site_within.aov))
 summary(Nf_Nd_site_within.aov)
+#not enough data (only one obs per)
 Nf_Nd_site_within.aov = aov(difsPerKb ~ spp, Nf_Nd_site_within %>% filter(site == "MI.UP"))
 qqnorm(residuals(Nf_Nd_site_within.aov))
 plot(residuals(Nf_Nd_site_within.aov))
 summary(Nf_Nd_site_within.aov)
+#not enough data (only one obs per)
 Nf_Nd_site_within.aov = aov(difsPerKb ~ spp, Nf_Nd_site_within %>% filter(site == "ME.N"))
 qqnorm(residuals(Nf_Nd_site_within.aov))
 plot(residuals(Nf_Nd_site_within.aov))
 summary(Nf_Nd_site_within.aov)
-#all sig, very low p-value
+#1.68e-07 ***
+#sig where possible to compare
 ################################
 ################################
 #Bootstrap 95% CIs
@@ -419,7 +443,7 @@ n_tab.wnbn = data.frame(
         paste("site pairs\nn =", c(Nf.betweens.site.n, Nd.betweens.site.n, Nc.betweens.site.n))
     ),
     spp = rep(c("Nf", "Nd", "Nc"), 2),
-    y = c(70, 9, 5, 1250, 49, 5.85),
+    y = c(40.5, 4.38, 2.625, 750, 25, 3.2),
     comp = c(rep("within", 3), rep("between", 3))
 ) #the y is nicely aligned between cols at 7 inch height pdf
 
@@ -449,12 +473,12 @@ p1 = ggplot(all.Dgen,
     ) +    
     ggh4x::facetted_pos_scales(
         y = list(
-            scale_y_continuous(breaks = c(0, 25, 50, 75)),
-            scale_y_continuous(breaks = c(0, 500, 1000, 1500)),
-            scale_y_continuous(breaks = c(0, 4, 8)),
-            scale_y_continuous(breaks = c(0, 20, 40, 60)),
+            scale_y_continuous(breaks = c(0, 15, 30, 45)),
+            scale_y_continuous(breaks = c(0, 300, 600, 900)),
             scale_y_continuous(breaks = c(0, 2, 4, 6)),
-            scale_y_continuous(breaks = c(0, 2, 4, 6, 8))
+            scale_y_continuous(breaks = c(0, 10,20, 30)),
+            scale_y_continuous(breaks = c(0, 1, 2, 3)),
+            scale_y_continuous(breaks = c(0, 1,2,3,4))
         )
     ) +
     my_gg_theme.def_size +
