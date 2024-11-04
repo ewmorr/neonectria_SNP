@@ -40,7 +40,8 @@ full_dat = left_join(Dgeo.long, Ddur.long, by = c("Var1", "Var2"))
 
 p1 = ggplot(full_dat, aes(x = km, y = durDif)) +
     geom_point(alpha = 0.25, shape = 1) +
-    geom_smooth(method = "lm", linetype = 2, color = "black") +
+    #geom_smooth(method = "lm", linetype = 1, color = "white", linewidth = 2) +
+    geom_smooth(method = "lm", linetype = 1, color = "black") +
     labs(x = "Geographic distance (km)", y = "Difference in infestation duration (years)") +
     annotate(
         geom = "text", 

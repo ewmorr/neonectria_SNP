@@ -58,11 +58,20 @@ dist.Nd.no_early[,colnames(dist.Nd) == early_collections] = NA
 
 adonis2(dist.Nd.no_early ~ duration_infection, data = Nd.pca_scores.metadata)
 #duration_infection  1 2.8149e+09 0.04612 1.3539  0.001 ***
+adonis2(dist.Nd.no_early ~ Tree_species, data = Nd.pca_scores.metadata)
+#Tree_species  8 1.7239e+10 0.28248 1.0334  0.055 .
+adonis2(dist.Nd.no_early ~ Tree_species+duration_infection, data = Nd.pca_scores.metadata)
 #
+adonis2(dist.Nd.no_early ~ Tree_species+duration_infection+state, data = Nd.pca_scores.metadata)
 #Run test of all with partial (by = "margin")
 anova(dbrda(dist.Nd.no_early ~ state+Tree_species+duration_infection, data=Nd.pca_scores.metadata, distance = "bray"), by="margin")
+#state               9 666671848 1.0624  0.024 *
+#    Tree_species        1  72281175 1.0367  0.114  
+#duration_infection  0         0   -Inf         
 anova(dbrda(dist.Nd.no_early ~ state+duration_infection+Tree_species, data=Nd.pca_scores.metadata, distance = "bray"), by="margin")
 anova(dbrda(dist.Nd.no_early ~ duration_infection+Tree_species, data=Nd.pca_scores.metadata, distance = "bray"), by="margin")
+#duration_infection  1   76285988 1.0642  0.107
+#Tree_species        8  573673530 1.0004  0.398
 anova(dbrda(dist.Nd.no_early ~ state+Tree_species, data=Nd.pca_scores.metadata, distance = "bray"), by="margin")
 anova(dbrda(dist.Nd.no_early ~ duration_infection+state, data=Nd.pca_scores.metadata, distance = "bray"), by="margin")
 anova(dbrda(dist.Nd.no_early ~ duration_infection, data=Nd.pca_scores.metadata, distance = "bray"), by="terms")

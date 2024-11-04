@@ -185,7 +185,7 @@ p4 = ggplot(Nf.pca_scores.metadata, aes(MDS1, MDS2, color = clust)) +
         color = "Cluster", 
         x = paste0("PCA1 (", round(Nf.eig_vals[1],3)*100, "% variance)"),
         y = paste0("PCA2 (", round(Nf.eig_vals[2],3)*100, "% variance)"),
-        title = "c" #c for main, d for supp 
+        title = "b" #c for main, d for supp, b no scree
     ) +
     my_gg_theme.def_size +
     theme(
@@ -198,3 +198,6 @@ pdf("figures/pop_gen/pca/Nf.durInf.pdf", width = 19, height = 5)
 grid.arrange(p2,p3,p4, ncol = 3, widths = c(0.37, 0.325, 0.305))
 dev.off()
 
+pdf("figures/pop_gen/pca/Nf.clusters_no_scree.pdf", width = 12.75, height = 4.75)
+grid.arrange(p2,p4, ncol = 2, widths = c(0.55, 0.45))
+dev.off()

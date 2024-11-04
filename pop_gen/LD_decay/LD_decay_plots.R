@@ -252,15 +252,19 @@ p2 = ggplot(all_slide.lt150,
     geom_smooth(method = loess, method.args = list(degree = 2, span = 0.4))  +
     my_gg_theme.def_size +
     scale_color_brewer(palette = "Set1") +
-    labs(x = "Distance (Kbp)", y = "Scaled LD (range 0-1)", title = "b") +
+    labs(x = "Pairwise SNP distance (Kbp)", y = "Scaled LD (range 0-1)", title = "b") +
     theme(
         legend.title = element_blank(),
         legend.position = c(0.85, 0.85),
         legend.text = element_text(size = 10),
-        plot.title = element_text(hjust = -0.125, vjust = -2)
+        plot.title = element_text(hjust = -0.11, vjust = -2)
     )
 p2
 
 pdf("figures/pop_gen/LD_decay/spp_comps.pdf", width = 12, height = 4.5)
+grid.arrange(p1,p2,ncol=2)
+dev.off()
+
+png("figures/pop_gen/LD_decay/spp_comps.png", width = 12, height = 4.5, units = "in", res = 300)
 grid.arrange(p1,p2,ncol=2)
 dev.off()

@@ -196,7 +196,8 @@ cor.test(Nf.long$km, Nf.long$SNPsPerKb, na.action = na.rm)
 
 p1 = ggplot(Nf.long, aes(x = km, y = SNPsPerKb)) +
     geom_point(alpha = 0.08, shape = 1) +
-    geom_smooth(method = "lm", linetype = 2, color = "black") +
+    geom_smooth(method = "lm", linetype = 1, color = "white", linewidth = 2) +
+    geom_smooth(method = "lm", linetype = 1, color = "black") +
     scale_y_continuous(breaks = c(3,4,5)) +
     labs(x = "Geographic distance (km)", y = "Hamming distance (SNPs per Kb)", title = "a") +
     annotate(
@@ -209,6 +210,7 @@ p1 = ggplot(Nf.long, aes(x = km, y = SNPsPerKb)) +
     theme(
         plot.title = element_text(hjust = -0.10)
     )
+p1
 
 p2 = ggplot(Nd.long, aes(x = km, y = SNPsPerKb)) +
     geom_point(alpha = 0.25, shape = 1) +
@@ -243,6 +245,14 @@ p3 = ggplot(Nc.long, aes(x = km, y = SNPsPerKb)) +
     )
 
 pdf("figures/pop_gen/IBD/IBD.pdf", width = 10, height = 3.5)
+grid.arrange(p1,p2,ncol = 2)
+dev.off()
+
+png("figures/pop_gen/IBD/IBD.png", width = 10, height = 3.5, units = "in", res = 300)
+grid.arrange(p1,p2,ncol = 2)
+dev.off()
+
+pdf("figures/pop_gen/IBD/IBD.color.pdf", width = 10, height = 3.5)
 grid.arrange(p1,p2,ncol = 2)
 dev.off()
 

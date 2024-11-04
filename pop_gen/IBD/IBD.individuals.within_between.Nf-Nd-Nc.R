@@ -506,7 +506,7 @@ p2 = ggplot(boot_df,
             levels = c("Nc", "Nd", "Nf"), 
             labels = c("N. coccinea", "N. ditissima", "N. faginata")
         ),
-        shape = factor(comp, levels = c("within", "between"))
+        shape = factor(comp, levels = c("between", "within"))
     )
 ) +
     geom_point(position = position_dodge(width = 0.9), size = 2.5) +
@@ -515,7 +515,7 @@ p2 = ggplot(boot_df,
         position = position_dodge(width = 0.9),
         width = 0.4
     ) +
-    scale_shape_manual(values = c(1,2)) +
+    scale_shape_manual(values = c(1,2), breaks = c("within", "between")) +
     #geom_linerange(
     #    aes(ymin = lower.CI, ymax = upper.CI), 
     #    position = position_dodge(width = 0.9),
@@ -546,6 +546,59 @@ pdf("figures/pop_gen/IBD/within-between.CIs.pdf", width = 10, height = 4)
 #p1 + p2
 grid.arrange(p1,p2,ncol = 2, widths = c(0.7,0.3))
 dev.off()
+
+
+p2 = ggplot(boot_df, 
+            aes(
+                y = med.boot, 
+                x = factor(spp,
+                           levels = c("Nc", "Nd", "Nf"), 
+                           labels = c("N. coccinea", "N. ditissima", "N. faginata")
+                ),
+                shape = factor(comp, levels = c("between", "within")),
+                color = factor(comp, levels = c("between", "within"))
+            )
+) +
+    geom_point(position = position_dodge(width = 0.9), size = 3) +
+    geom_errorbar(
+        aes(ymin = lower.CI, ymax = upper.CI), 
+        position = position_dodge(width = 0.9),
+        width = 0.4,
+        color = "black"
+    ) +
+    scale_shape_manual(values = c(16,17), breaks = c("within", "between")) +
+    scale_color_brewer(palette = "Dark2", breaks = c("within", "between")) +
+    #geom_linerange(
+    #    aes(ymin = lower.CI, ymax = upper.CI), 
+    #    position = position_dodge(width = 0.9),
+    #    linewidth = 3
+    #) +
+    my_gg_theme.def_size +
+    coord_flip() +
+    scale_y_continuous(breaks = c(0,5,10), limits = c(0,NA)) +
+    labs(
+        shape = "Site comparison", 
+        color = "Site comparison",
+        y = "Hamming distance (SNPs per Kb)",
+        title = "b"
+    ) +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.y = element_text(angle = 90, hjust = 0.5),
+        legend.position = "top", #c(0.75,0.85),
+        legend.margin = margin(0, 0, -10, 0),
+        legend.spacing.x = unit(0, "mm"),
+        legend.spacing.y = unit(0, "mm"),
+        legend.title = element_text(size = 10),
+        plot.title = element_text(hjust = -0.075, margin = margin(b = -7.5))
+    ) 
+p2
+
+pdf("figures/pop_gen/IBD/within-between.CIs.color.pdf", width = 10, height = 4)
+#p1 + p2
+grid.arrange(p1,p2,ncol = 2, widths = c(0.7,0.3))
+dev.off()
+
 
 ##################
 ##################    

@@ -167,7 +167,8 @@ cor.test(Nf.long$durDif, Nf.long$SNPsPerKb, na.action = na.rm)
 
 p1 = ggplot(Nf.long, aes(x = durDif, y = SNPsPerKb)) +
     geom_point(alpha = 0.08, shape = 1) +
-    geom_smooth(method = "lm", linetype = 2, color = "black") +
+    geom_smooth(method = "lm", linetype = 1, color = "white", linewidth = 2) +
+    geom_smooth(method = "lm", linetype = 1, color = "black") +
     labs(x = "Difference in infestation duration (years)", y = "Hamming distance (SNPs per Kb)", title = "a") +
     annotate(
         geom = "text", 

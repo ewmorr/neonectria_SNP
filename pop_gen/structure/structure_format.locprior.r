@@ -119,3 +119,15 @@ n_snps
 #1748 snps  (for structure input options)
 colnames(gt_str) = paste("SNP_", seq(1, n_snps), sep = "")
 head(gt_str[,1:5])
+
+#adding the loc info
+sample_ids = row.names(gt_str)
+metadata = read.csv("data/sample_metadata/Nc_canton_loc_date.lat_lon.csv")
+loc_data = left_join(data.frame(Sequence_label = sample_ids), metadata %>% dplyr::select(Sequence_label, Canton) )
+loc_int = data.frame(Canton = unique(loc_data$Canton), int = 1:length(unique(loc_data$Canton)))
+loc_data.int = left_join(loc_data, loc_int, by = "Canton")
+gt_str.loc = data.frame(LocData = loc_data.int$int, gt_str)
+gt_str.loc[,1:5] %>% head
+
+write.table(gt_str.loc, "data/Nc/final_tables/FINAL_snp.thinned_no_NA.LocData.structure", quote = F, sep = "\t", row.names = T, col.names = NA)
+#subsequently delete the LocData colname manually or with sed
