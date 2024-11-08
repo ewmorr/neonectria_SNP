@@ -9,9 +9,9 @@
 module purge
 module load linuxbrew/colsa
 
-cd $HOME/core_fugr_invariant_sites_GVCF
+cd $HOME/core_genome_fugr_SPANDx/Outputs/Master_vcf/
 
-#bgzip -c out.invariant_sites.vcf > out.invariant_sites.vcf.gz
-#tabix out.invariant_sites.vcf.gz
+bgzip -c out.vcf > out.vcf.gz
+tabix out.vcf.gz
 
-bcftools view -R vcf.collated.coords -Oz -o core.out.invariant_sites.vcf.gz out.invariant_sites.vcf.gz
+bcftools view -R $HOME/core_fugr_invariant_sites_GVCF/vcf.collated.coords -Oz -o core.out.vcf.gz out.vcf.gz
