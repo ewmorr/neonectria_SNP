@@ -8,7 +8,7 @@ library(adegenet)
 #conda activate R-pop_gen
 
 #metadata
-sample_metadata.Nf = read.csv("Nf_pop_IBD_11182024/Nf_filtered.lat_lon_dur_inf.csv")
+sample_metadata.Nf = read.csv("~/Nf_pop_IBD_11182024/Nf_filtered.lat_lon_dur_inf.csv")
 
 
 #########
@@ -16,7 +16,7 @@ sample_metadata.Nf = read.csv("Nf_pop_IBD_11182024/Nf_filtered.lat_lon_dur_inf.c
 ind.metrics = sample_metadata.Nf %>% select(Sequence_label, state, lat, lon)
 
 #filtered VCF
-vcf <- read.vcfR("Nf_pop_IBD_11182024/FINAL_snp.IBD_analyses.vcf.gz", verbose = FALSE)
+vcf <- read.vcfR("~/Nf_pop_IBD_11182024/FINAL_snp.IBD_analyses.vcf.gz", verbose = FALSE)
 gl = vcfR2genlight(vcf)
 #In vcfR2genlight(vcf) : Found 47046 loci with more than two alleles.
 #Objects of class genlight only support loci with two alleles.
@@ -91,4 +91,4 @@ for(u in 1:n_boots){
     distances.list[[u]] = Dgen.2
 }
 
-saveRDS(distances.list, "Nf_pop_IBD_11182024/Nf.DSCE.three_samples_per_site.rds")
+saveRDS(distances.list, "~/Nf_pop_IBD_11182024/Nf.DSCE.three_samples_per_site.rds")
