@@ -122,7 +122,7 @@ write.table(lib_five, "data/shared_buscos/lib_five_ids.txt", quote = F, row.name
 # Shared BUSCOs
 
 #filtered VCF
-vcf <- read.vcfR("data/shared_buscos/out.vcf", verbose = FALSE)
+vcf <- read.vcfR("data/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/out.vcf", verbose = FALSE)
 
 #just pulling in dp to get sample IDs
 
@@ -154,8 +154,8 @@ lib_three = third_set.ids[third_set.ids %in% sample_ids]
 lib_four = fourth_set.ids[fourth_set.ids %in% sample_ids]
 lib_five = fifth_set.ids[fifth_set.ids %in% sample_ids]
 
-write.table(lib_one, "data/shared_buscos/lib_one_ids.txt", quote = F, row.names = F, col.names = F)
-write.table(lib_two, "data/shared_buscos/lib_two_ids.txt", quote = F, row.names = F, col.names = F)
-write.table(lib_three, "data/shared_buscos/lib_three_ids.txt", quote = F, row.names = F, col.names = F)
-write.table(lib_four, "data/shared_buscos/lib_four_ids.txt", quote = F, row.names = F, col.names = F)
-write.table(lib_five, "data/shared_buscos/lib_five_ids.txt", quote = F, row.names = F, col.names = F)
+write.table(lib_one, "data/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/lib_one_ids.txt", quote = F, row.names = F, col.names = F)
+write.table(lib_two, "data/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/lib_two_ids.txt", quote = F, row.names = F, col.names = F)
+write.table(lib_three, "data/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/lib_three_ids.txt", quote = F, row.names = F, col.names = F)
+write.table(lib_four, "data/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/lib_four_ids.txt", quote = F, row.names = F, col.names = F)
+write.table(lib_five, "data/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/lib_five_ids.txt", quote = F, row.names = F, col.names = F)

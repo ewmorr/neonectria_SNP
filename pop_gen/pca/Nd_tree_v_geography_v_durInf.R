@@ -38,6 +38,14 @@ Nd.hcpc = HCPC(Nd.pca_scores[,1:3], nb.clust = 0)
 plot(Nd.hcpc)
 Nd.hcpc$desc.ind
 Nd.hcpc$data.clust
+#write for metadata
+write.csv(
+    data.frame(Sequence_label = row.names(Nd.hcpc$data.clust), HCPC.cluster = Nd.hcpc$data.clust$clust),
+    "data/sample_metadata/Nd_filtered.HCPC_clust.csv",
+    row.names = F,
+    quote = F
+)
+###########
 Nd.pca_scores = Nd.hcpc$data.clust
 Nd.pca_scores$Sequence_label = rownames(Nd.pca_scores)
 Nd.pca_scores.metadata = left_join(Nd.pca_scores, Nd.sample_metadata %>% select(Sequence_label, Site, duration_infection, state, collection_period, Tree_species))

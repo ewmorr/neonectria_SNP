@@ -338,3 +338,79 @@ sed '1d' final_tables/FINAL_invariant.IBD_analyses.table.snps_only.positions | w
 cat core.Fusgr1.snp_pos.cat.fasta final_tables/FINAL_invariant.snps_only.for_phylogeny.fasta > core.Fusgr1-neonectria.snps_plus_invariant_aln.fasta
 perl ../../library/get_seq_lens.pl core.Fusgr1-neonectria.snps_plus_invariant_aln.fasta | less
 # looks good
+
+
+
+##############################
+# no core extract/ Fugr1_ref
+
+cd ~/repo/neonectria_SNP/data/Fugr1_ref/map_against_Fugr_no_core_extract/final_tables
+
+#Convert GVCF to SNP matrix
+bcftools view -Oz -o FINAL_snp.vcf.gz FINAL_snp.bcf
+gatk IndexFeatureFile --input FINAL_snp.vcf.gz
+gatk VariantsToTable -V FINAL_snp.vcf.gz \
+    -O FINAL_snp.IBD_analyses.table \
+    -F CHROM -F POS -F REF -F ALT -F TYPE -GF GT
+
+#convert NA to N for fasta conversion
+sed 's:\t\.:\tN:g' FINAL_snp.IBD_analyses.table > FINAL_snp.IBD_analyses.table.na2n
+
+#there are INDELS and "MIXED" indel/snp sites
+cut -f 5 FINAL_snp.IBD_analyses.table.na2n | sort | uniq
+
+grep INDEL FINAL_snp.IBD_analyses.table.na2n | wc -l
+# 80841
+grep MIXED FINAL_snp.IBD_analyses.table.na2n | wc -l
+# 19042
+grep SNP FINAL_snp.IBD_analyses.table.na2n | wc -l
+# 290104 (compared to 34K from the core aln)
+#
+#We will only deal with the SNPs for the phylogeny
+grep -vE 'MIXED|INDEL' FINAL_snp.IBD_analyses.table.na2n > FINAL_snp.IBD_analyses.table.snps_only
+
+# fasta conversion
+perl ~/repo/neonectria_SNP/library/snp_table2fasta.pl FINAL_snp.IBD_analyses.table.snps_only 5 > FINAL_snp.snps_only.for_phylogeny.fasta
+less -S FINAL_snp.snps_only.for_phylogeny.fasta
+#sed -i '' 's/NGT//' FINAL_snp.snps_only.for_phylogeny.fasta # note if this is needed need to correct the regex to only look in the header
+
+#############################
+#############################
+### Need to add FUGR ref seq to the fasta manually
+### Pull the list of positions from the final table (that was converted to fasta)
+###
+###
+grep -v "^#" FINAL_snp.IBD_analyses.table.na2n | cut -f 1,2 | less
+grep -v "^#" FINAL_snp.IBD_analyses.table.snps_only | cut -f 1,2 | less
+grep -v "^#" FINAL_snp.IBD_analyses.table.snps_only | cut -f 1,2 > FINAL_snp.IBD_analyses.table.snps_only.positions
+
+cd ~/repo/neonectria_SNP/data/Fugr1_ref
+
+#note this MUST be against the full ref, not the nucmer core ref (otherwise the positions will not be calculated correctly in the VCF)
+#i.e., the ref must be the same as what was mapped against to create the VCF
+perl ../../library/get_fasta_from_pos.pl Fusgr1_AssemblyScaffolds_Repeatmasked-N.fasta map_against_Fugr_no_core_extract/final_tables/FINAL_snp.IBD_analyses.table.snps_only.positions > map_against_Fugr_no_core_extract/core.Fusgr1.snp_pos.fasta
+
+cd map_against_Fugr_no_core_extract
+#check to make sure the tig orders are correct before conactenate
+cut -f 1 final_tables/FINAL_snp.IBD_analyses.table.snps_only.positions | uniq | sed '1d' > pos_scf_order.txt
+grep ">" core.Fusgr1.snp_pos.fasta | sed 's/^>//' > fas_scf_order.txt
+
+wc -l pos_scf_order.txt
+wc -l fas_scf_order.txt
+#both 15
+
+diff pos_scf_order.txt fas_scf_order.txt
+# no diffs
+
+perl ../../../library/cat_fasta.pl core.Fusgr1.snp_pos.fasta Fusgr1_core_snp_pos > core.Fusgr1.snp_pos.cat.fasta
+perl ../../../library/get_seq_lens.pl core.Fusgr1.snp_pos.cat.fasta
+#290104 (funny enough just a bit shorter than the core SNPs plus invariants)
+perl ../../../library/get_seq_lens.pl final_tables/FINAL_snp.snps_only.for_phylogeny.fasta | less
+#290104
+
+sed '1d' final_tables/FINAL_snp.IBD_analyses.table.snps_only.positions | wc -l
+# 290104
+
+cat core.Fusgr1.snp_pos.cat.fasta final_tables/FINAL_snp.snps_only.for_phylogeny.fasta > core.Fusgr1-neonectria.snps_aln.fasta
+perl ../../../library/get_seq_lens.pl core.Fusgr1-neonectria.snps_aln.fasta | less
+# looks good

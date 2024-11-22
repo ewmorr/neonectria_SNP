@@ -55,8 +55,10 @@ scale_dat %>% filter(PRVSTTNAME == "Quebec") %>% pull(CONAME)
 #Looks like we will have to do this manually
 subdiv_names.quebec = districts.cut %>% filter(PRVSTTNAME == "Quebec") %>% pull(CONAME)
 subdivScale_names.quebec = scale_dat %>% filter(PRVSTTNAME == "Quebec") %>% pull(CONAME)
-write.table(sort(subdiv_names.quebec), "data/sample_metadata/quebec_bad_names.txt", row.names = F, col.names = F, quote = F)
-write.table(sort(subdivScale_names.quebec), "data/sample_metadata/quebec_scale_good_names.txt", row.names = F, col.names = F, quote = F)
+
+#write.table(sort(subdiv_names.quebec), "data/sample_metadata/quebec_bad_names.txt", row.names = F, col.names = F, quote = F)
+#write.table(sort(subdivScale_names.quebec), "data/sample_metadata/quebec_scale_good_names.txt", row.names = F, col.names = F, quote = F)
+
 #manually mapped the subdiv names to region names based on here
 # https://en.wikipedia.org/wiki/List_of_regional_county_municipalities_and_equivalent_territories_in_Quebec
 #Nord-du-quebec_removed (it's not in the scale data and we don't map it
@@ -119,6 +121,19 @@ meta_n[4,3] = -84.8
 meta_n[5,3] = -87.2
 meta_n[26,3] = -84.6
 meta_n[27,3] = -87.0
+#same deal for the Odell Nf/Nd (NB.YO)
+#also for the Gatineau Nf/Nd (QC.OUG), BUT they are also overplotting on Chelsea (QC.OUG) which has three Nf
+# We are going to need to rerun the within between tests too, because we had the QC.OU sites as the same (but they are not)
+#Nf went left by .1 and Nd went right by .1
+meta_n[22,3] = -75.8
+meta_n[41,3] = -76.0
+#also move down slightly
+meta_n[22,2] = 45.19
+meta_n[41,2] = 45.21
+
+
+
+
 ## there is a lot of overlap in the NH site plotting. Let's move CW a bit to the right, move JG a bit south and right
 meta_n %>% print(n = Inf)
 # NH.JG    43.1 -70.9
@@ -173,19 +188,23 @@ p1 = ggplot(all.counties.scale) +
     my_gg_theme.def_size +
     guides(
         color = guide_legend(
+            order = 1,
             override.aes = list(
                 fill = c("black", "white"), 
                 shape = 21, 
                 color = "black", 
                 size = 3
             )
-        )
+        ),
+        size = guide_legend(order = 2),
+        fill = guide_colorbar(order = 3)
     ) +
     theme(
         axis.text = element_blank(),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.ticks = element_blank()
+        axis.ticks = element_blank(),
+        legend.key = element_blank()
     )
 p1
 

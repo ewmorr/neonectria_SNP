@@ -188,7 +188,7 @@ Nc.within.site_n = Nc.withins.site$site %>% unique %>% length
 #bind the species tables
 comp.withins = rbind(Nf.withins.site, Nd.withins.site, Nc.withins.site)
 nrow(comp.withins)
-
+#364
 
 #between
 Nf.betweens = Nf.Dgen.long[Nf.Dgen.long$comp == "between" & !is.na(Nf.Dgen.long$value),]
@@ -236,6 +236,7 @@ Nc.betweens.site.n = paste(Nc.betweens.site$site1, Nc.betweens.site$site2, sep =
 #bind spp tables
 comp.betweens = rbind(Nf.betweens, Nd.betweens, Nc.betweens)
 nrow(comp.betweens)
+#6274
 
 #################
 #aov within sites

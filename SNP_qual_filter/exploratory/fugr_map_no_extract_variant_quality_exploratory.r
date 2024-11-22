@@ -4,7 +4,7 @@ library(ggplot2)
 source("library/ggplot_theme.txt")
 
 #filtered VCF
-vcf <- read.vcfR("data/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/out.vcf", verbose = FALSE)
+vcf <- read.vcfR("data/Fugr1_ref/map_against_Fugr_no_core_extract/out.vcf", verbose = FALSE)
 
 ##########################
 #Variant level metrics   #
@@ -71,7 +71,7 @@ p6 = ggplot(vcf.qual, aes(x = QUAL)) +
     labs(x = "QUAL (>100k excluded")
 p6
 
-pdf("figures/quality_filtering/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/genotype_qual.SNP.pdf", width = 6, height = 4)
+pdf("figures/quality_filtering/Fugr1_ref/map_against_Fugr_no_extract_core/genotype_qual.SNP.pdf", width = 6, height = 4)
 p1
 p2
 p3
@@ -123,6 +123,8 @@ p1 = ggplot(
 
 p1
 
+#note multiple peaks. These are likely species specific
+
 p2 = ggplot(
     ind_stats, 
     aes(y = ind_na*100, x = reorder(ind_names, ind_na))
@@ -168,12 +170,12 @@ p4 = ggplot(
 p4
 
 
-pdf("figures/quality_filtering/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/locus.NA_DP.pdf", width = 10, height = 6)
+pdf("figures/quality_filtering/Fugr1_ref/map_against_Fugr_no_extract_core/locus.NA_DP.pdf", width = 10, height = 6)
 p1
 p3
 dev.off()
 
-pdf("figures/quality_filtering/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/individual.NA_DP.pdf", width = 16, height = 6)
+pdf("figures/quality_filtering/Fugr1_ref/map_against_Fugr_no_extract_core/individual.NA_DP.pdf", width = 16, height = 6)
 p2
 p4
 dev.off()
@@ -191,7 +193,7 @@ p5 = ggplot(dp.long, aes(x = DP)) +
     facet_wrap(~sample, nrow = 7) +
     my_gg_theme
                
-pdf("figures/quality_filtering/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/individual_DP.facets.pdf", width = 60, height = 45)
+pdf("figures/quality_filtering/Fugr1_ref/map_against_Fugr_no_extract_core/individual_DP.facets.pdf", width = 60, height = 45)
 p5
 dev.off()
 #no bimodal dists when looking at indiviodual samples
@@ -291,85 +293,137 @@ p1 = ggplot(
     locus_dp_mean.libOne.df, 
     aes(x = locus_mean_DP)
 ) +
-    geom_histogram(bins = 50) +
+    geom_histogram(bins = 100) +
     theme_classic() +
     labs(x = "Lib 1 average (across lib 1 indvs)", y = "count (SNP)") 
-p1 + geom_vline(xintercept = mean(locus_dp_mean.libOne)+(2*sd(locus_dp_mean.libOne)) )
+#p1 + geom_vline(xintercept = mean(locus_dp_mean.libOne)+(2*sd(locus_dp_mean.libOne)) )
+maxDP_libOne = 19
+p1 + geom_vline(xintercept = maxDP_libOne )
+#that ends up looking perfect
 
 locus_dp_mean.libOne.df %>%
-    dplyr::filter(locus_mean_DP > mean(locus_dp_mean.libOne)+(2*sd(locus_dp_mean.libOne))) %>%
+    dplyr::filter(locus_mean_DP > maxDP_libOne) %>%
     nrow()
-#118
+#840
 libOne_names = locus_dp_mean.libOne.df %>%
-    dplyr::filter(locus_mean_DP > mean(locus_dp_mean.libOne)+(2*sd(locus_dp_mean.libOne))) %>%
+    dplyr::filter(locus_mean_DP > maxDP_libOne) %>%
     dplyr::pull(SNP_name)
 
 libOne_names = data.frame(
     contig = sub("(.*?_.*?)_(.*)", "\\1", libOne_names),
     pos = sub("(.*?_.*?)_(.*)", "\\2", libOne_names)
 )
-write.table(libOne_names, "data/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/filtering_lists/lib_one_maxDP_SNPs.txt", row.names = F, col.names = F, quote = F, sep = "\t")
+write.table(libOne_names, "data/Fugr1_ref/map_against_Fugr_no_core_extract/filtering_lists/lib_one_maxDP_SNPs.txt", row.names = F, col.names = F, quote = F, sep = "\t")
 
 #libTwo
 locus_dp_mean.libTwo.df = data.frame(locus_mean_DP = locus_dp_mean.libTwo, SNP_name = names(locus_dp_mean.libTwo))
+p1 = ggplot(
+    locus_dp_mean.libTwo.df, 
+    aes(x = locus_mean_DP)
+) +
+    geom_histogram(bins = 100) +
+    theme_classic() +
+    labs(x = "Lib 1 average (across lib 1 indvs)", y = "count (SNP)") 
+#p1 + geom_vline(xintercept = mean(locus_dp_mean.libTwo)+(2*sd(locus_dp_mean.libTwo)) )
+maxDP_libTwo = 47
+p1 + geom_vline(xintercept = maxDP_libTwo )
+#that ends up looking perfect
+
 locus_dp_mean.libTwo.df %>%
-    dplyr::filter(locus_mean_DP > mean(locus_dp_mean.libTwo)+(2*sd(locus_dp_mean.libTwo))) %>%
+    dplyr::filter(locus_mean_DP > maxDP_libTwo) %>%
     nrow()
-#149
+#725
 libTwo_names = locus_dp_mean.libTwo.df %>%
-    dplyr::filter(locus_mean_DP > mean(locus_dp_mean.libTwo)+(2*sd(locus_dp_mean.libTwo))) %>%
+    dplyr::filter(locus_mean_DP > maxDP_libTwo) %>%
     dplyr::pull(SNP_name)
 
 libTwo_names = data.frame(
     contig = sub("(.*?_.*?)_(.*)", "\\1", libTwo_names),
     pos = sub("(.*?_.*?)_(.*)", "\\2", libTwo_names)
 )
-write.table(libTwo_names, "data/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/filtering_lists/lib_two_maxDP_SNPs.txt", row.names = F, col.names = F, quote = F, sep = "\t")
+write.table(libTwo_names, "data/Fugr1_ref/map_against_Fugr_no_core_extract/filtering_lists/lib_two_maxDP_SNPs.txt", row.names = F, col.names = F, quote = F, sep = "\t")
 
 #libThree
 locus_dp_mean.libThree.df = data.frame(locus_mean_DP = locus_dp_mean.libThree, SNP_name = names(locus_dp_mean.libThree))
+p1 = ggplot(
+    locus_dp_mean.libThree.df, 
+    aes(x = locus_mean_DP)
+) +
+    geom_histogram(bins = 100) +
+    theme_classic() +
+    labs(x = "Lib 1 average (across lib 1 indvs)", y = "count (SNP)") 
+#p1 + geom_vline(xintercept = mean(locus_dp_mean.libThree)+(2*sd(locus_dp_mean.libThree)) )
+maxDP_libThree = 85
+p1 + geom_vline(xintercept = maxDP_libThree )
+#that ends up looking perfect
+
 locus_dp_mean.libThree.df %>%
-    dplyr::filter(locus_mean_DP > mean(locus_dp_mean.libThree)+(2*sd(locus_dp_mean.libThree))) %>%
+    dplyr::filter(locus_mean_DP > maxDP_libThree) %>%
     nrow()
-#145
+#362
 libThree_names = locus_dp_mean.libThree.df %>%
-    dplyr::filter(locus_mean_DP > mean(locus_dp_mean.libThree)+(2*sd(locus_dp_mean.libThree))) %>%
+    dplyr::filter(locus_mean_DP > maxDP_libThree) %>%
     dplyr::pull(SNP_name)
 
 libThree_names = data.frame(
     contig = sub("(.*?_.*?)_(.*)", "\\1", libThree_names),
     pos = sub("(.*?_.*?)_(.*)", "\\2", libThree_names)
 )
-write.table(libThree_names, "data/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/filtering_lists/lib_three_maxDP_SNPs.txt", row.names = F, col.names = F, quote = F, sep = "\t")
+write.table(libThree_names, "data/Fugr1_ref/map_against_Fugr_no_core_extract/filtering_lists/lib_three_maxDP_SNPs.txt", row.names = F, col.names = F, quote = F, sep = "\t")
 
 #libFour
 locus_dp_mean.libFour.df = data.frame(locus_mean_DP = locus_dp_mean.libFour, SNP_name = names(locus_dp_mean.libFour))
+p1 = ggplot(
+    locus_dp_mean.libFour.df, 
+    aes(x = locus_mean_DP)
+) +
+    geom_histogram(bins = 100) +
+    theme_classic() +
+    labs(x = "Lib 1 average (across lib 1 indvs)", y = "count (SNP)") 
+#p1 + geom_vline(xintercept = mean(locus_dp_mean.libFour)+(2*sd(locus_dp_mean.libFour)) )
+maxDP_libFour = 69
+p1 + geom_vline(xintercept = maxDP_libFour )
+#that ends up looking perfect
+
 locus_dp_mean.libFour.df %>%
-    dplyr::filter(locus_mean_DP > mean(locus_dp_mean.libFour)+(2*sd(locus_dp_mean.libFour))) %>%
+    dplyr::filter(locus_mean_DP > maxDP_libFour) %>%
     nrow()
-#88
+#274
 libFour_names = locus_dp_mean.libFour.df %>%
-    dplyr::filter(locus_mean_DP > mean(locus_dp_mean.libFour)+(2*sd(locus_dp_mean.libFour))) %>%
+    dplyr::filter(locus_mean_DP > maxDP_libFour) %>%
     dplyr::pull(SNP_name)
 
 libFour_names = data.frame(
     contig = sub("(.*?_.*?)_(.*)", "\\1", libFour_names),
     pos = sub("(.*?_.*?)_(.*)", "\\2", libFour_names)
 )
-write.table(libFour_names, "data/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/filtering_lists/lib_four_maxDP_SNPs.txt", row.names = F, col.names = F, quote = F, sep = "\t")
+write.table(libFour_names, "data/Fugr1_ref/map_against_Fugr_no_core_extract/filtering_lists/lib_four_maxDP_SNPs.txt", row.names = F, col.names = F, quote = F, sep = "\t")
+
 
 #libFive
 locus_dp_mean.libFive.df = data.frame(locus_mean_DP = locus_dp_mean.libFive, SNP_name = names(locus_dp_mean.libFive))
+p1 = ggplot(
+    locus_dp_mean.libFive.df, 
+    aes(x = locus_mean_DP)
+) +
+    geom_histogram(bins = 100) +
+    theme_classic() +
+    labs(x = "Lib 1 average (across lib 1 indvs)", y = "count (SNP)") 
+#p1 + geom_vline(xintercept = mean(locus_dp_mean.libFive)+(2*sd(locus_dp_mean.libFive)) )
+maxDP_libFive = 38
+p1 + geom_vline(xintercept = maxDP_libFive )
+#that ends up looking perfect
+
 locus_dp_mean.libFive.df %>%
-    dplyr::filter(locus_mean_DP > mean(locus_dp_mean.libFive)+(2*sd(locus_dp_mean.libFive))) %>%
+    dplyr::filter(locus_mean_DP > maxDP_libFive) %>%
     nrow()
-#141
+#293
 libFive_names = locus_dp_mean.libFive.df %>%
-    dplyr::filter(locus_mean_DP > mean(locus_dp_mean.libFive)+(2*sd(locus_dp_mean.libFive))) %>%
+    dplyr::filter(locus_mean_DP > maxDP_libFive) %>%
     dplyr::pull(SNP_name)
 
 libFive_names = data.frame(
     contig = sub("(.*?_.*?)_(.*)", "\\1", libFive_names),
     pos = sub("(.*?_.*?)_(.*)", "\\2", libFive_names)
 )
-write.table(libFive_names, "data/Fugr1_ref/map_against_Fugr_then_extract_nucmer_core/filtering_lists/lib_five_maxDP_SNPs.txt", row.names = F, col.names = F, quote = F, sep = "\t")
+write.table(libFive_names, "data/Fugr1_ref/map_against_Fugr_no_core_extract/filtering_lists/lib_five_maxDP_SNPs.txt", row.names = F, col.names = F, quote = F, sep = "\t")

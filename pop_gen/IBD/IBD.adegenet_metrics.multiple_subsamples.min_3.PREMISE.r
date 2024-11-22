@@ -8,15 +8,16 @@ library(adegenet)
 #conda activate R-pop_gen
 
 #metadata
-sample_metadata.Nf = read.csv("~/Nf_pop_IBD_11182024/Nf_filtered.lat_lon_dur_inf.csv")
-
+sample_metadata.Nf = read.csv("~/Nf_pop_IBD_11222024/Nf_filtered.lat_lon_dur_inf.csv")
+#sample_metadata.Nf = read.csv("data/sample_metadata/Nf_filtered.lat_lon_dur_inf.csv")
 
 #########
 #prev used table of sample,state.name,lat,lon
 ind.metrics = sample_metadata.Nf %>% select(Sequence_label, state, lat, lon)
 
 #filtered VCF
-vcf <- read.vcfR("~/Nf_pop_IBD_11182024/FINAL_snp.IBD_analyses.vcf.gz", verbose = FALSE)
+vcf <- read.vcfR("~/Nf_pop_IBD_11222024/FINAL_snp.IBD_analyses.vcf.gz", verbose = FALSE)
+#vcf <- read.vcfR("data/Nf/final_tables/rm_dups/FINAL_snp.IBD_analyses.vcf.gz", verbose = FALSE)
 gl = vcfR2genlight(vcf)
 #In vcfR2genlight(vcf) : Found 47046 loci with more than two alleles.
 #Objects of class genlight only support loci with two alleles.
@@ -45,13 +46,30 @@ keep.ind.list = data.frame(gl@ind.names, pop.gl = pop(gl)) %>% filter(!pop.gl %i
 # sample size
 # then average matrices at the end.
 #will keep dissim matrices in a list
-
 distances.list = list()
 #based on the lowest number of samples to include sites
 min_samps = 3
+# the format conversions are the longest running bits. Pull as much out of the loop as possible
+# gl format cannot convert directly to gi so roundtrip to df first
+# the +1 does not seem strictly necessary but was recommended in a previous thread
+# so we keep it. It does not eat up too much 
+# gl2df -> df + 1 -> df2gi
+# need to keep the gi2gp conversion in loop as this is where the allele calc is set
+
+#start.time <- Sys.time()
+y = as.data.frame(gl)
+gi = df2genind(y+1, ploidy=1)
+gi@pop = gl@pop
+
+#end.time <- Sys.time()
+#time.taken <- end.time - start.time
+#time.taken
+
+#run the bootstrapping
+
+#start.time <- Sys.time()
 
 n_boots = 1000
-#run the bootstrapping
 for(u in 1:n_boots){
     
     keep.ind.rand = list()
@@ -66,29 +84,25 @@ for(u in 1:n_boots){
     keep.ind.rand.df = bind_rows(keep.ind.rand)
     ##########################################
 
-    gl.subset = gl[gl@ind.names %in% keep.ind.rand.df$gl.ind.names]
-    
-    #Need to convert to genpop for adegenet dist.genpop
-    
-    #First convert to a data.frame which will give a table of 0, 1, NA, and then add 1 to values to have correct conversion of NA (0 is default)
-    y = as.data.frame(gl.subset)
-    gi.subset = df2genind(y + 1, ploidy=1)
-    #reset pop
-    gi.subset@pop = gl.subset@pop
-
-    #Remove uninformative sites
-    #retrieve the colnames of sites with only one allele
+    # take subset. the drop = T removes invariable loci
+    # actually drop = T doesn't seem to work
+    # still many loci where loc.n.all == 1
+    gi.subset = gi[keep.ind.rand.df$gl.ind.names]
     to_remove = names(gi.subset@loc.n.all[gi.subset@loc.n.all == 1 ])
-    #get the col index
-    rm_indx = which(colnames(y) %in% to_remove)
+    rm_indx = which(names(gi.subset@loc.n.all) %in% to_remove)
     gi.subset.rm = gi.subset[loc=-rm_indx]
-
     gp = genind2genpop(gi.subset.rm)
-
+    
+    
     #There are several distance metrics available
     #Method 2 is "Angular distance or Edward's distance" D[CSE]
     Dgen.2 <- dist.genpop(gp,method=2)
     distances.list[[u]] = Dgen.2
 }
+
+#end.time <- Sys.time()
+#time.taken <- end.time - start.time
+#time.taken
+
 
 saveRDS(distances.list, "~/Nf_pop_IBD_11182024/Nf.DSCE.three_samples_per_site.rds")

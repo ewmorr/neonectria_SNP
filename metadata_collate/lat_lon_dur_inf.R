@@ -8,6 +8,8 @@ head(site_data)
 all_metadata = left_join(sample_data, site_data, by = "Site")
 nrow(all_metadata) == nrow(sample_data)
 
+all_metadata$collection_period = ifelse(all_metadata$year_sampled < 2010, "early", "modern")
+
 colnames(all_metadata)
 write.csv(
     all_metadata, 
