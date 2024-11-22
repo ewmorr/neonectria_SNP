@@ -8,7 +8,7 @@ library(adegenet)
 #conda activate R-pop_gen
 
 #metadata
-sample_metadata.Nf = read.csv("~/Nf_pop_IBD_11222024/Nf_filtered.lat_lon_dur_inf.csv")
+sample_metadata.Nf = read.csv("~/Nf_pop_IBD_11182024/Nf_filtered.lat_lon_dur_inf.csv")
 #sample_metadata.Nf = read.csv("data/sample_metadata/Nf_filtered.lat_lon_dur_inf.csv")
 
 #########
@@ -16,7 +16,7 @@ sample_metadata.Nf = read.csv("~/Nf_pop_IBD_11222024/Nf_filtered.lat_lon_dur_inf
 ind.metrics = sample_metadata.Nf %>% select(Sequence_label, state, lat, lon)
 
 #filtered VCF
-vcf <- read.vcfR("~/Nf_pop_IBD_11222024/FINAL_snp.IBD_analyses.vcf.gz", verbose = FALSE)
+vcf <- read.vcfR("~/Nf_pop_IBD_11182024/FINAL_snp.IBD_analyses.vcf.gz", verbose = FALSE)
 #vcf <- read.vcfR("data/Nf/final_tables/rm_dups/FINAL_snp.IBD_analyses.vcf.gz", verbose = FALSE)
 gl = vcfR2genlight(vcf)
 #In vcfR2genlight(vcf) : Found 47046 loci with more than two alleles.

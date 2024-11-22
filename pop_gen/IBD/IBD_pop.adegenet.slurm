@@ -9,7 +9,7 @@ module purge
 module load anaconda/colsa
 conda activate R-pop_gen
 
-cd ~/Nf_pop_IBD_fixedMetadata_11222024/
+cd ~/Nf_pop_IBD_11182024/
 
 Rscript ~/repo/neonectria_SNP/pop_gen/IBD/IBD.adegenet_metrics.multiple_subsamples.min_3.PREMISE.r
 
