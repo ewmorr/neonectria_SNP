@@ -8,16 +8,16 @@ library(adegenet)
 #conda activate R-pop_gen
 
 #metadata
-sample_metadata.Nf = read.csv("~/Nf_pop_IBD_11182024/Nf_filtered.lat_lon_dur_inf.csv")
-#sample_metadata.Nf = read.csv("data/sample_metadata/Nf_filtered.lat_lon_dur_inf.csv")
+sample_metadata.Nf = read.csv("~/Nd_pop_IBD_11182024/Nd_filtered.lat_lon_dur_inf.csv")
+sample_metadata.Nd = read.csv("data/sample_metadata/Nd_filtered.lat_lon_dur_inf.csv")
 
 #########
 #prev used table of sample,state.name,lat,lon
-ind.metrics = sample_metadata.Nf %>% select(Sequence_label, state, lat, lon)
+ind.metrics = sample_metadata.Nd %>% select(Sequence_label, state, lat, lon)
 
 #filtered VCF
-vcf <- read.vcfR("~/Nf_pop_IBD_11182024/FINAL_snp.IBD_analyses.vcf.gz", verbose = FALSE)
-#vcf <- read.vcfR("data/Nf/final_tables/rm_dups/FINAL_snp.IBD_analyses.vcf.gz", verbose = FALSE)
+vcf <- read.vcfR("~/Nd_pop_IBD_11182024/FINAL_snp.IBD_analyses.vcf.gz", verbose = FALSE)
+vcf <- read.vcfR("data/Nd/final_tables/rm_dups/FINAL_snp.IBD_analyses.vcf.gz", verbose = FALSE)
 gl = vcfR2genlight(vcf)
 #In vcfR2genlight(vcf) : Found 47046 loci with more than two alleles.
 #Objects of class genlight only support loci with two alleles.
@@ -37,8 +37,16 @@ gl@ploidy = rep(as.integer(1), nInd(gl))
 
 #SOME SITES HAVE SMALL SAMPLE SIZE
 #Set min sample size to 3
-min_samps = 4
-low_n_states = ( (gl@other$ind.metrics %>% group_by(state) %>% summarize(n = n()) ) %>% filter(n < min_samps) )$state
+low_n_states = ( (gl@other$ind.metrics %>% group_by(state) %>% summarize(n = n()) ) %>% filter(n < 3) )$state
+
+#############################
+#############################
+# THERE ARE ONLY 2 SITES WITH
+# MORE THAN 2 INDVS
+# SO NO POINT IN RUNNING THIS
+
+
+
 
 keep.ind.list = data.frame(gl@ind.names, pop.gl = pop(gl)) %>% filter(!pop.gl %in% c(low_n_states))
 
@@ -49,7 +57,7 @@ keep.ind.list = data.frame(gl@ind.names, pop.gl = pop(gl)) %>% filter(!pop.gl %i
 #will keep dissim matrices in a list
 distances.list = list()
 #based on the lowest number of samples to include sites
-
+min_samps = 3
 # the format conversions are the longest running bits. Pull as much out of the loop as possible
 # gl format cannot convert directly to gi so roundtrip to df first
 # the +1 does not seem strictly necessary but was recommended in a previous thread
@@ -106,4 +114,4 @@ for(u in 1:n_boots){
 #time.taken
 
 
-saveRDS(distances.list, "~/Nf_pop_IBD_11182024/Nf.DSCE.four_samples_per_site.rds")
+saveRDS(distances.list, "~/Nf_pop_IBD_11182024/Nf.DSCE.three_samples_per_site.rds")

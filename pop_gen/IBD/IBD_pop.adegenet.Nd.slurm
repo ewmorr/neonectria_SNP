@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 #SBATCH --ntasks=1
 #SBATCH --job-name="adegenet"
-#SBATCH --output=adegenet.four_samples.out
+#SBATCH --output=adegenet.out
 #SBATCH --partition=shared
 #SBATCH --exclude=node105,node106,node107,node108,node117,node118,node119,node167
 
