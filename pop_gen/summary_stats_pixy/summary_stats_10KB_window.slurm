@@ -17,4 +17,3 @@ pixy --stats pi fst dxy \
     --populations Nf.pixy_pops.tsv \
     --window_size 10000 \
     --n_cores 12
-

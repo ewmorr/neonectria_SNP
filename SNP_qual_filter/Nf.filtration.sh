@@ -749,6 +749,25 @@ cd rm_dups
 vcftools --gzvcf FINAL_snp.IBD_analyses.vcf.gz --mac 2 --recode --out FINAL_snp.mac_ge2
 #kept 447150 out of a possible 1116141 Sites
 bgzip FINAL_snp.mac_ge2.recode.vcf
+
+#bialleles
+bcftools view -m2 -M2 -v snps FINAL_snp.IBD_analyses.vcf.gz -Oz -o FINAL_snp.biallele.vcf.gz
+#convert to diploid for calculation of tajD with vcf-kit
+# note the -- indicates start of plugin options
+bcftools +fixploidy -Oz -o FINAL_snp.biallele.TajDdiploid.vcf.gz FINAL_snp.biallele.vcf.gz -- -f 2
+########
+# the snpR package is absolute garbage, don't bother
+
+#remove first space in header
+bgzip FINAL_snp.biallele.snpR.vcf
+gunzip FINAL_snp.biallele.snpR.vcf
+
+gunzip -c FINAL_snp.biallele.vcf.gz | grep -v "^#" | cut -f-5,7- > FINAL_snp.biallele.no_qual.data.only
+gunzip -c FINAL_snp.biallele.vcf.gz | grep "^#" > FINAL_snp.biallele.no_qual.header
+#manually remove the QUAL from the header
+cat FINAL_snp.biallele.no_qual.header FINAL_snp.biallele.no_qual.data.only > FINAL_snp.biallele.no_qual.vcf
+bgzip FINAL_snp.biallele.no_qual.vcf
+
 #
 #LD filter
 bcftools +prune -m 0.5 -w 10000 -Oz -o FINAL_snp.mac_ge2.LD.pca_analyses.vcf.gz FINAL_snp.mac_ge2.recode.vcf.gz &
@@ -758,7 +777,7 @@ bcftools +prune -m 0.5 -w 10000 -Oz -o FINAL_snp.mac_ge2.LD.pca_analyses.vcf.gz 
 bcftools view -m2 -M2 -v snps FINAL_snp.mac_ge2.recode.vcf.gz | bcftools +prune -m 0.5 -w 10000 -Oz -o FINAL_snp.mac_ge2.biallele.LD.structure_analyses.vcf.gz &
 
 #
-#bialleles
+#bialleles (on MAC filtered)
 bcftools view -m2 -M2 -v snps FINAL_snp.mac_ge2.recode.vcf.gz -Oz -o FINAL_snp.mac_ge2.biallele.gwas_analyses.vcf.gz &
 
 ########################
