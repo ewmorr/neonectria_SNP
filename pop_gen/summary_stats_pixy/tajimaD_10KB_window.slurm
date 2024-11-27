@@ -1,8 +1,7 @@
 #!/usr/bin/bash
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=12
-#SBATCH --job-name="pixy"
-#SBATCH --output=pixy.out
+#SBATCH --job-name="vk"
+#SBATCH --output=vk.out
 #SBATCH --partition=shared
 #SBATCH --exclude=node105,node106,node107,node108,node117,node118,node119,node167
 
