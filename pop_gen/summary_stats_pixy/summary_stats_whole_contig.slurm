@@ -15,7 +15,7 @@ cd ~/Nf_pixy/
 pixy --stats pi fst dxy \
     --vcf FINAL_invariant.nuclear.vcf.gz \
     --populations Nf.pixy_pops.tsv \
-    --window_size 10000 \
+    --bed_file contigs.bed \
     --n_cores 12
 
-mv pixy_*.txt window_10kb/
+mv pixy_*.txt whole_contig

@@ -12,7 +12,7 @@ write.table((sample_metadata.Nf %>% select(Sequence_label, state)), "data/sample
 
 
 state_n = sample_metadata.Nf %>% group_by(state) %>% summarise(n = n())
-low_n = state_n %>% filter(n < 4)
+low_n = state_n %>% filter(n < 2)
 low_n
 
 write.table((sample_metadata.Nf %>% filter(!state %in% low_n$state) %>% select(Sequence_label, state)), "data/sample_metadata/Nf.tajD_pops.tsv", sep = "\t", col.names = F, row.names = F, quote = F)

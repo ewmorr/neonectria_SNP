@@ -19,7 +19,7 @@ row.names(ind.metrics) = ind.metrics$sampID
 #filtered VCF
 # bialleles only
 # we are now also excluding singletons bc this was causing problems with the conversion to snpR
-vcf <- read.vcfR("data/Nf/final_tables/rm_dups/FINAL_snp.mac_ge2.biallele.gwas_analyses.vcf.gz", verbose = FALSE)
+vcf <- read.vcfR("data/Nf/final_tables/rm_dups/FINAL_snp.biallele.vcf.gz", verbose = FALSE)
 
 gt = extract.gt(vcf, element='GT', as.numeric=TRUE)
 gt.pos_list = strsplit(row.names(gt), "_")
@@ -63,5 +63,15 @@ foo = calc_tajimas_d(
     global = T #use this to just calculate global
 )
 
-foo = get.snpR.stats(dat)
+#foo = get.snpR.stats(dat)
 str(foo)
+foo@weighted.means
+
+tajD = foo@weighted.means %>% 
+    filter(facet == "pop" & !is.na(global_D)) %>%
+    select(subfacet, global_ws.theta, global_ts.theta, global_D, global_num_seg)
+colnames(tajD)[1] = "state"
+tajD$state = sub("_", ".", tajD$state)
+write.csv(tajD, "data/Nf/pixy/tajD.snpR.csv", row.names = F, quote = F)
+
+
