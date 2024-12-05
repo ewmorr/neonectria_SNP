@@ -12,6 +12,7 @@ n_min = 4
 low_n = state_n %>% filter(n < n_min) %>% pull(state)
 
 fst.dist = readRDS("data/Nf/pixy/windowed_10kb/fst_dist.window_avg.rds")
+fst.dist = readRDS("data/Nf/pixy/whole_contig/fst_dist.rds")
 fst.mat = as.matrix(fst.dist) 
 fst.mat[upper.tri(fst.mat)] = NA
 diag(fst.mat) = NA
@@ -43,7 +44,7 @@ p1 = ggplot(fst.df, # %>% filter(!is.na(Fst)),
     )
 p1
 
-pdf("figures/pop_gen/pixy/Fst_lower_tri.pdf", width = 5, height = 5)
+pdf("figures/pop_gen/pixy/Fst_lower_tri.whole_contig_calc.pdf", width = 5, height = 5)
 p1
 dev.off()
     

@@ -7,10 +7,17 @@ library(snpR)
 
 #metadata
 sample_metadata.Nf = read.csv("data/sample_metadata/Nf_filtered.lat_lon_dur_inf.csv")
+state_n = sample_metadata.Nf %>% group_by(state) %>% summarise(n = n())
+state_n %>% print(n = Inf)
+#filter based on n
+n_min = 4
+low_n = state_n %>% filter(n < n_min) %>% pull(state)
 
 #########
 #prev used table of sample,state.name,lat,lon
-ind.metrics = sample_metadata.Nf %>% select(Sequence_label, state, lat, lon)
+ind.metrics = sample_metadata.Nf %>% 
+    select(Sequence_label, state, lat, lon) %>% 
+    filter(!state %in% low_n)
 colnames(ind.metrics) = c("sampID", "pop", "lat", "lon")
 sub("\\.", "_", ind.metrics$pop) -> ind.metrics$pop #snpR does not accept "." ... beyond annoying
 
@@ -18,11 +25,13 @@ row.names(ind.metrics) = ind.metrics$sampID
 
 #filtered VCF
 # bialleles only
-# we are now also excluding singletons bc this was causing problems with the conversion to snpR
+# 
 vcf <- read.vcfR("data/Nf/final_tables/rm_dups/FINAL_snp.biallele.vcf.gz", verbose = FALSE)
 
 gt = extract.gt(vcf, element='GT', as.numeric=TRUE)
-gt.pos_list = strsplit(row.names(gt), "_")
+gt.low_n = gt[,colnames(gt) %in% ind.metrics$sampID]
+ncol(gt.low_n)
+gt.pos_list = strsplit(row.names(gt.low_n), "_")
 gt.pos_df = data.frame(
     chr = paste(
         lapply(gt.pos_list, function(x) x[1]) %>% unlist,
@@ -34,7 +43,7 @@ gt.pos_df = data.frame(
 ) #note these column names must be chr and position for snpR
 #because theres no argument to indicate chr and pos in the tajimaD func
 
-gt = data.frame(gt)
+gt = data.frame(gt.low_n)
 nrow(gt)
 nrow(gt.pos_df)
 gt[is.na(gt)] = "NN"
@@ -48,10 +57,10 @@ rm(vcf)
 gc()
 
 
-#bi-allelic snpRdata with 424811 SNPs and 115 samples.
+#bi-allelic snpRdata with 969175 SNPs and 115 samples.
 #Calculated statistics can be accessed via get.snpR.stats()
 #
-# note that this is about half of the SNPs we get when including mac==1
+# 
 # 
 foo = calc_tajimas_d(
     dat,
@@ -63,6 +72,13 @@ foo = calc_tajimas_d(
     global = T #use this to just calculate global
 )
 
+foo_seg = calc_seg_sites(
+    dat, 
+    facets = c("pop", "chr"),
+    rarefaction = T
+)
+        
+                         
 #foo = get.snpR.stats(dat)
 str(foo)
 foo@weighted.means

@@ -17,5 +17,12 @@ low_n
 
 write.table((sample_metadata.Nf %>% filter(!state %in% low_n$state) %>% select(Sequence_label, state)), "data/sample_metadata/Nf.tajD_pops.tsv", sep = "\t", col.names = F, row.names = F, quote = F)
 
+pca_clust = read.csv("data/sample_metadata/Nf_filtered.HCPC_clust.csv")
+pca_clust
 
-            
+pca_clust$HCPC.cluster = paste0("clust_", pca_clust$HCPC.cluster)
+    
+write.table(pca_clust, "data/sample_metadata/Nf_pixy_pops.HCPC_clust.txt", sep = "\t", col.names = F, row.names = F, quote = F)
+    
+    
+    
