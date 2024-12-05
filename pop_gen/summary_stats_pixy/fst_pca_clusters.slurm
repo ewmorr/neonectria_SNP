@@ -16,12 +16,14 @@ pixy --stats fst \
     --vcf FINAL_invariant.nuclear.vcf.gz \
     --populations Nf_pixy_pops.HCPC_clust.txt \
     --bed_file contigs.bed \
-    --output_folder whole_contig_clusters_pop \
     --n_cores 12
+
+mv pixy_*.txt whole_contig_clusters_pop
 
 pixy --stats pi fst dxy \
     --vcf FINAL_invariant.nuclear.vcf.gz \
     --populations Nf_pixy_pops.HCPC_clust.txt \
     --window_size 10000 \
-    --output_folder window_10Kb_clusters_pop \
     --n_cores 12
+
+mv pixy_*.txt window_10Kb_clusters_pop/
