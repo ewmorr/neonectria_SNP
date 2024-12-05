@@ -9,7 +9,7 @@ state_n = sample_metadata.Nf %>% group_by(state) %>% summarise(n = n())
 state_n %>% print(n = Inf)
 
 
-dxy = read.table("data/Nf/pixy/pixy_dxy.txt", header = T)
+dxy = read.table("data/Nf/pixy/windowed_10kb/pixy_dxy.txt", header = T)
 dxy_means = dxy %>%
     group_by(pop1, pop2) %>%
     summarize(dxy_mean = sum(count_diffs, na.rm = T)/sum(count_comparisons, na.rm = T))
@@ -18,7 +18,7 @@ dxy_means
 #########
 #########
 #filter based on n
-n_min = 3
+n_min = 4
 low_n = state_n %>% filter(n < n_min) %>% pull(state)
 dxy_means %>%
     filter(!pop1 %in% low_n & !pop2 %in% low_n) -> dxy_means.min_n
@@ -76,6 +76,10 @@ as.dist(Dgeo)
 #mantel
 mantel(dxy.dist, as.dist(Dgeo))
 #Mantel statistic r: 0.5948 
+#Significance: 0.002 
+
+#with 4 samples per site
+#Mantel statistic r: 0.5872 
 #Significance: 0.002 
 
 #INCLUDING ALL SITES (EVEN WITH 1 REP)
