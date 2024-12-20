@@ -1,20 +1,37 @@
 library(dplyr)
 library(ggplot2)
+library(gridExtra)
 source("library/ggplot_theme.txt")
 
 #calc for theta W
 harmonic_number = function(x){
     hnv = vector(mode = "numeric", length = length(x))
     for(v in 1:length(x)){
-        hn = 0
-        for(i in 1:x[v]){
-            hn = hn + 1/i
-        }
-        hnv[v] = hn
+        #hn = 0
+        #for(i in 1:x[v]){
+        #    hn = hn + 1/i
+        #}
+        hnv[v] = sum(1/(seq(from=1, to=x[v], by=1)))
     }
     return(hnv)
 }
+harmonic_number(1:5)
+
+sum(1/(seq(from=1, to=(n-1), by=1)))
+
 harmonic_number(seq(1:5))
+
+
+calc_c = function(x){
+    c = x*(x-1)/2
+    return(c)
+}
+calc_n = function(x){
+    n = (1 + sqrt(1 + 8*x))/2
+    return(n)
+}
+calc_c(7)
+calc_n(21)
 
 
 sample_metadata.Nf = read.csv("data/sample_metadata/Nf_filtered.lat_lon_dur_inf.csv")
@@ -213,21 +230,21 @@ p1 = ggplot(all_dat.cols, aes(x = duration_infection, y = pi_mean)) +
     )
 p1
 
-p2 = ggplot(all_dat.cols, aes(x = duration_infection, y = global_ws.theta)) +
+p2 = ggplot(all_dat.cols, aes(x = duration_infection, y = global_ws.theta/(41018940/1000))) +
     geom_smooth(method = "lm", color="black", linetype = 2) +
     geom_point(aes(fill = state), size = 3, shape = 21) +
     #scale_color_manual(values = all_dat.cols$col) +
     scale_fill_manual(values = all_dat.cols$colors, guide = "none") +
     labs(
         x = "Duration infestation (years)", 
-        y = expression(paste("Watterson's ", theta)),
+        y = expression(paste(theta[italic(W)], " (SNPs Kb"^-1,")")),
         fill ="Site",
-        "a"
+        "b"
     ) +
     annotate(
         geom = "text",
         x = min(all_dat.cols$duration_infection),
-        y = max(all_dat.cols$global_ws.theta),
+        y = max(all_dat.cols$global_ws.theta)/(41018940/1000),
         hjust = 0,
         label = expression(paste("r = 0.18, ", italic(P), " = 0.54"))
     ) +
@@ -236,3 +253,31 @@ p2 = ggplot(all_dat.cols, aes(x = duration_infection, y = global_ws.theta)) +
         plot.title = element_text(hjust= -0.1, vjust = -1)
     )
 p2
+
+p3 = ggplot(all_dat.cols, aes(x = duration_infection, y = TajimaD.snpR)) +
+    geom_smooth(method = "lm", color="black", linetype = 2) +
+    geom_point(aes(fill = state), size = 3, shape = 21) +
+    #scale_color_manual(values = all_dat.cols$col) +
+    scale_fill_manual(values = all_dat.cols$colors) +
+    labs(
+        x = "Duration infestation (years)", 
+        y = "Tajima's D",
+        fill ="Site",
+        "c"
+    ) +
+    annotate(
+        geom = "text",
+        x = min(all_dat.cols$duration_infection),
+        y = min(all_dat.cols$TajimaD.snpR),
+        hjust = 0,
+        label = expression(paste("r = -0.34, ", italic(P), " = 0.23"))
+    ) +
+    my_gg_theme.def_size +
+    theme(
+        plot.title = element_text(hjust= -0.1, vjust = -1)
+    )
+p3
+
+pdf("figures/pop_gen/pixy/pi_theta_D.snpR_theta_D.pdf", width = 16, height = 4.5)
+grid.arrange(p1,p2,p3,widths = c(0.31,0.31,0.38))
+dev.off()
