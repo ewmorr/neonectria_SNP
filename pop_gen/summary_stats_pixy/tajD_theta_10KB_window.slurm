@@ -2,13 +2,13 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=12
 #SBATCH --job-name="pixy"
-#SBATCH --output=pixy_tajD.out
+#SBATCH --output=pixy_tajD_10kb.out
 #SBATCH --partition=shared
 #SBATCH --exclude=node105,node106,node107,node108,node117,node118,node119,node167
 
 module purge
 module load anaconda/colsa
-conda activate pixy
+conda activate pixy_tajD
 
 cd ~/Nf_pixy/
 
