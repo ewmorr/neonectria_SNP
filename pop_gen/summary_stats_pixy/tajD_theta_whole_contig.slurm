@@ -8,6 +8,7 @@
 
 module purge
 module load anaconda/colsa
+conda deactivate
 conda activate pixy_tajD
 
 cd ~/Nf_pixy/
