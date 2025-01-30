@@ -1,5 +1,7 @@
 #trying this locally
 # run on four cores (we have 5 performance and 6 efficiency cores)
+# note that ld-window controls the maximum number of *variants* separating 2 SNPs whereas ld-window-Kb controls the number of *bp* (Kbp) separating 2 SNPs
+
 
 conda activate bcftools
 

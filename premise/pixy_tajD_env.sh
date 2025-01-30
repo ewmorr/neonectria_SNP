@@ -23,6 +23,7 @@ conda install scikit-allel
 # the las t dimension indicates ploidy which we have coerced to diploid
 # we need to test what happens when a variant is all NA
 # we are also biallelic and strictly homozygous
+conda activate pixy_tajD
 >>>
 import pixy.core
 import allel
@@ -43,6 +44,16 @@ g = allel.GenotypeArray( [
     ]
 )
 
+g = allel.GenotypeArray( [
+        [[0], [0]],
+        [[0], [1]],
+        [[1], [1]],
+        [[0], [-1]],
+        [[1], [-1]],
+        [[-1], [-1]]
+    ]
+)
+
 #count alelles
 g.count_alleles()
 # <AlleleCountsArray shape=(6, 2) dtype=int32>
@@ -51,6 +62,13 @@ g.count_alleles()
 0 4
 2 0
 0 2
+0 0
+>>>
+2 0
+1 1
+0 2
+1 0
+0 1
 0 0
 >>>
 
@@ -70,14 +88,19 @@ g.count_alleles()
 #testing on inteactive python env with g array above
 allele_counts = g.count_alleles(max_allele = 1)
 allele_counts = allele_counts[allele_counts[:,0]+allele_counts[:,1] != 0]
+#allele_counts = allele_counts[allele_counts[:,0]+allele_counts[:,1] > 1]
 
 
 variant_counts = allele_counts[allele_counts[:,1] != 0]
+variant_counts = variant_counts[variant_counts[:,0] + variant_counts[:,1] > 1]
 
 S = Counter(variant_counts[:,0] + variant_counts[:,1])
 N = Counter(allele_counts[:,0] + allele_counts[:,1])
 
 N_array = np.array(tuple(N.items()))
+#the following works to remove single genotype sites from the weighted site matrix (which should not be used to weight the watterson's theta calc)
+N_array = N_array[N_array[:,0] != 1]
+weighted_sites = np.sum(np.multiply(N_array[:,1], (N_array[:,0]/max(N))))
 
 watterson_theta = 0
 for n, s in S.items():
@@ -88,3 +111,12 @@ for n, s in S.items():
 for n, s in S.items():
     print(n)
     print(s)
+
+##################################
+# the error looks like it is coming from np.arrange
+# where n == 1. This results in a 0 float from the sum and hence illegal division
+# change the declaration of variant counts to only consider sites where allele_counts[:,0] + allele_counts[:,1] > 1
+
+# we also need to incorporate these new checks into the core.py script so that the correct number of total sites and seg sites will be reported (for incorporation into genome wide clacs)
+line 514 and L515 (allele_counts and variant_sites in waterson theta def)
+line 550 (allele_counts tajima's d)

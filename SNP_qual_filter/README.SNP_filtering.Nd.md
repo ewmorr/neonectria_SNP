@@ -5,22 +5,6 @@
 
 ## SNP and sample filtering
 
-### Filter out SNPs that SPANDx FAIL filtering
-```
-cd ~/Nf_SPANDx_all_seqs/Outputs/Master_vcf
-ls ../.. | grep fastq | wc -l #250/2 = 125
-grep "##\|#\|PASS" out.filtered.vcf > out.filtered.PASS.vcf
-grep -v "##\|#" out.filtered.PASS.vcf | wc -l
-```
-530256 SNPs remaining x 125 samples = 66282000
-```
-grep -o "\s\.:" out.filtered.PASS.vcf | wc -l
-```
-2920386 NA sites
-2920386/66282000 = 4.41%
-
-# The depth numbers below have been updated for Nd but the above values have not
-
 #### Note that SPANDx performs variant level filtering (i.e., across samples) based on depth calibrated quality score (QD, QDFilter), root mean square mapping quality (MQ) and Fisher Strand bias (Fisher's exact test on reads supporting different base call on fwd vs rev strand [high FS is worse], QD > 10 (GATK rec is 2); MQ > 30 (GATK rec is 40); FS < 60 (GATK rec is 60). Note that QD only applies to variant calls (so does not affect invariant sites)
 #### See here for variant filtering reccomendations from Broad institute https://gatk.broadinstitute.org/hc/en-us/articles/360035890471-Hard-filtering-germline-short-variants
 #### We need to examine the effect of the SPANDx filtering and possibly perform a different filtering based on the GATK recs
@@ -33,8 +17,8 @@ genotype (ind x locus)
 
 1. First filter loci based on GATK recs, minor allele count (mac >= 2), biallelic only (the latter two with vcftools) AND
 2. apply depth filters either across sequencing libraries or per individual; can apply DP filters based on individual mean or library wide mean; standard approach is to apply genotype DP filters based on mean across a sample set, or in this case across the library (i.e., filter genotypes within an individual based on the lib wise mean values)
-- There are some strong library based effects on both locus DP and individual DP. Follow above, i.e., filter whole loci based on lib-wise 
-- locus DP across libraries
+    - There are some strong library based effects on both locus DP and individual DP. Follow above, i.e., filter whole loci based on lib-wise 
+    - locus DP across libraries
 
 ```
     libOne  libTwo  libThree    libFour
@@ -43,9 +27,9 @@ mean    9.3    26.8   66.0  39.4
 median  9.6    29.7   75  43.6
 sd  7.5 16.1    39.0    29.1
 ```
---DP genotype DP filters should be applied on VCF that is split by library (as there are library depth effects), and then the split VCF recombined before performing the following missingness filtering (vcf-merge to cat samples with the same loci, vcf-concat to cat loci with the same samples [e.g., different chromosomes], must be bgzipped and tabixed)
+    - genotype DP filters should be applied on VCF that is split by library (as there are library depth effects), and then the split VCF recombined before performing the following missingness filtering (vcf-merge to cat samples with the same loci, vcf-concat to cat loci with the same samples [e.g., different chromosomes], must be bgzipped and tabixed)
 3. apply iterative missing data filters, e.g., the LYLF paper applies: geno < 50%, imiss < 90%; geno < 40%, imiss < 70%; geno < 30%, imiss < 50%; geno < 5%, imiss < 25%
-- note LYLF paper applies depth and qual based filters at genotype level (minDP 5, minQUAL 20), applies mean DP (15) and mac (3), THEN filters by iterative NA filters, then appliers INFO based filters (i.e., the GATK recs), then applies the final missingness filter. WHY? It seems that GATK hard-filtering should be applied first as these are the recommended filters for low-qual SNPs and can therefore affect missingness at both locus and individual
+    - note LYLF paper applies depth and qual based filters at genotype level (minDP 5, minQUAL 20), applies mean DP (15) and mac (3), THEN filters by iterative NA filters, then appliers INFO based filters (i.e., the GATK recs), then applies the final missingness filter. WHY? It seems that GATK hard-filtering should be applied first as these are the recommended filters for low-qual SNPs and can therefore affect missingness at both locus and individual
 
 
 ## For invariant calls set

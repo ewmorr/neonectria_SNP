@@ -22,6 +22,11 @@ plink --bfile FINAL_snp.mac_ge2.LD.pca_analyses --allow-extra-chr --distance squ
 mv plink.dist FINAL_snp.mac_ge2.LD.pca_analyses.dist
 mv plink.dist.id FINAL_snp.mac_ge2.LD.pca_analyses.dist.id
 
+gunzip -c FINAL_snp.mac_ge2.LD.pca_analyses.vcf.gz | grep -v ^# | wc -l
+# 196928
+gunzip -c FINAL_snp.mac_ge2.biallele.LD.structure_analyses.vcf.gz | grep -v ^# | wc -l
+# 188237
+
 
 #Nd
 cd ~/repo/neonectria_SNP/data/Nd/final_tables/rm_dups/
@@ -43,6 +48,11 @@ plink --bcf FINAL_snp.mac_ge2.LD.pca_analyses.bcf --out FINAL_snp.mac_ge2.LD.pca
 plink --bfile FINAL_snp.mac_ge2.LD.pca_analyses --allow-extra-chr --distance square --threads 8
 mv plink.dist FINAL_snp.mac_ge2.LD.pca_analyses.dist
 mv plink.dist.id FINAL_snp.mac_ge2.LD.pca_analyses.dist.id
+
+gunzip -c FINAL_snp.mac_ge2.LD.pca_analyses.vcf.gz | grep -v ^# | wc -l
+# 87437
+gunzip -c FINAL_snp.mac_ge2.biallele.LD.structure_analyses.vcf.gz | grep -v ^# | wc -l
+# 81334
 
 #Nc
 cd ~/repo/neonectria_SNP/data/Nc/final_tables/

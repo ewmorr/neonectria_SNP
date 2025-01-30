@@ -324,17 +324,11 @@ p1.mod
 # grid on HCPC clust and K
 Nf.try_order = Nf.sample_metadata[with(Nf.sample_metadata, order(duration_infection, state)),"Sequence_label"] 
 
-###########################
 #remaking clust as factor
-# supplemental fig
-# sort cols by PCA axis 1 order as done in main fig
-Nf.pca_scores.metadata = read.csv("data/pca/Nf_pca.metadata.csv")
-
-Nf.K_df.clust = left_join(Nf.K_df.clust, Nf.pca_scores.metadata %>% select(Sequence_label, MDS1))
 
 p1.mod = ggplot(Nf.K_df.clust %>% filter(K >= 2 & K <= 5), 
                 aes(
-                    x = reorder(Sequence_label, MDS1), 
+                    x = factor(Sequence_label, levels = Nf.try_order), 
                     y = Q, 
                     fill = ancestor
                 )
@@ -394,13 +388,10 @@ Nd.K_df.clust = left_join(Nd.K_df, Nd_clust)
 
 Nd.try_order = Nd.sample_metadata[with(Nd.sample_metadata, order(duration_infection, state)),"Sequence_label"] 
 
-Nd.pca_scores.metadata = read.csv("data/pca/Nd_pca.metadata.csv")
-Nd.K_df.clust = left_join(Nd.K_df.clust, Nd.pca_scores.metadata %>% select(Sequence_label, MDS1))
-
 
 p2.mod = ggplot(Nd.K_df.clust %>% filter(K >= 2 & K <= 5), 
                 aes(
-                    x = reorder(Sequence_label, MDS1), 
+                    x = factor(Sequence_label, levels = Nd.try_order), 
                     y = Q, 
                     fill = ancestor
                 )
@@ -415,7 +406,7 @@ p2.mod = ggplot(Nd.K_df.clust %>% filter(K >= 2 & K <= 5),
         space = "free_x",
         switch = "both"
     ) + 
-    scale_fill_brewer(palette = "Set2", guide = "none") +
+    scale_fill_brewer(palette = "Set1", guide = "none") +
     my_gg_theme.def_size +
     labs(
         x = "HCPC cluster (bars represent individuals)",

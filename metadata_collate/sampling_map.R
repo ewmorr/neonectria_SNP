@@ -98,6 +98,10 @@ Nd.meta %>%
     summarize(n = n()) %>%
     print(n = Inf)
 Nd.meta %>% 
+    group_by(state, lat, lon, duration_infection,collection_period) %>% 
+    summarize(n = n()) %>%
+    print(n = Inf)
+Nd.meta %>% 
     group_by(state, lat, lon, duration_infection, Site, collection_period) %>% 
     summarize(n = n()) %>%
     pull(n) %>% sum()
@@ -122,6 +126,8 @@ meta_n[5,3] = -87.2
 meta_n[26,3] = -84.6
 meta_n[27,3] = -87.0
 #same deal for the Odell Nf/Nd (NB.YO)
+meta_n[8,3] = -66.8
+meta_n[30,3] = -66.6
 #also for the Gatineau Nf/Nd (QC.OUG), BUT they are also overplotting on Chelsea (QC.OUG) which has three Nf
 # We are going to need to rerun the within between tests too, because we had the QC.OU sites as the same (but they are not)
 #Nf went left by .1 and Nd went right by .1
@@ -172,7 +178,7 @@ p1 = ggplot(all.counties.scale) +
             size = n
         )
     ) +
-    geom_point(data = meta_n,  
+    geom_point(data = meta_n %>% filter(spp != "Nf"),  
         aes(
             x = lon, 
             y = lat, 

@@ -103,9 +103,9 @@ geom_cladelabel(
         #offset.text = 0.01,
         hjust = 0
     ) +
+p1    
     
-    
-pdf("figures/pop_gen/phylogeny/fugr_outgroup.ggtree.pdf", width = 8, height = 9)
-p1
-dev.off()
+#pdf("figures/pop_gen/phylogeny/Nf.ggtree.pdf", width = 8, height = 9)
+#p1
+#dev.off()
 

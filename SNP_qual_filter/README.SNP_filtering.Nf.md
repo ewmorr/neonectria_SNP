@@ -5,19 +5,6 @@
 
 ## SNP and sample filtering
 
-### Filter out SNPs that SPANDx FAIL filtering
-```
-cd ~/Nf_SPANDx_all_seqs/Outputs/Master_vcf
-ls ../.. | grep fastq | wc -l #250/2 = 125
-grep "##\|#\|PASS" out.filtered.vcf > out.filtered.PASS.vcf
-grep -v "##\|#" out.filtered.PASS.vcf | wc -l
-```
-530256 SNPs remaining x 125 samples = 66282000
-```
-grep -o "\s\.:" out.filtered.PASS.vcf | wc -l
-```
-2920386 NA sites
-2920386/66282000 = 4.41%
 
 #### Note that SPANDx performs variant level filtering (i.e., across samples) based on depth calibrated quality score (QD, QDFilter), root mean square mapping quality (MQ) and Fisher Strand bias (Fisher's exact test on reads supporting different base call on fwd vs rev strand [high FS is worse], QD > 10 (GATK rec is 2); MQ > 30 (GATK rec is 40); FS < 60 (GATK rec is 60). Note that QD only applies to variant calls (so does not affect invariant sites)
 #### See here for variant filtering reccomendations from Broad institute https://gatk.broadinstitute.org/hc/en-us/articles/360035890471-Hard-filtering-germline-short-variants
@@ -25,15 +12,14 @@ grep -o "\s\.:" out.filtered.PASS.vcf | wc -l
 - the largest effect will be on the change in QD,which retains more SNPs with the GATK rec. There is a long tail (skew) and the SPANDx filter of QD > 10 is about halfway through. Not a huge effect (visually) and we can likely take the GATK rec, based on increasing the MQ filter (note that a QUAL filter of min 30 has been performed automatically as GATK rec'd; this is the locus level quality score, so feeds QD), and then performing subsequent depth based filtering. Filter at GATK recs across the board
 
 Terminology from "loci you're looking for" paper
-locus, SNP (a position in the genome across individuals)
-individual (a sample)
-genotype (ind x locus)
+- locus, SNP (a position in the genome across individuals)
+- individual (a sample)
+- genotype (ind x locus)
 
 1. First filter loci based on GATK recs, minor allele count (mac >= 2), biallelic only (the latter two with vcftools) AND
 2. apply depth filters either across sequencing libraries or per individual; can apply DP filters based on individual mean or library wide mean; standard approach is to apply genotype DP filters based on mean across a sample set, or in this case across the library (i.e., filter genotypes within an individual based on the lib wise mean values)
-- There are some strong library based effects on both locus DP and individual DP. Follow above, i.e., filter whole loci based on lib-wise 
-- locus DP across libraries
-# The following need to be updated based on excluding NA values (but they are basically the same either way)
+    - There are some strong library based effects on both locus DP and individual DP. Follow above, i.e., filter whole loci based on lib-wise 
+    - locus DP across libraries
 ```
     libOne  libTwo  libThree    libFour
 max (min is 0)   840.7727 1840.81  2335.5   2264.636
@@ -41,9 +27,9 @@ mean    8.1    22.8   36.5  29.1
 median  6.5    21.9   36.3  28.8
 sd  8.2 20.3    33.5    24.9
 ```
---DP genotype DP filters should be applied on VCF that is split by library (as there are library depth effects), and then the split VCF recombined before performing the following missingness filtering (vcf-merge to cat samples with the same loci, vcf-concat to cat loci with the same samples [e.g., different chromosomes], must be bgzipped and tabixed)
+    - DP genotype DP filters should be applied on VCF that is split by library (as there are library depth effects), and then the split VCF recombined before performing the following missingness filtering (vcf-merge to cat samples with the same loci, vcf-concat to cat loci with the same samples [e.g., different chromosomes], must be bgzipped and tabixed)
 3. apply iterative missing data filters, e.g., the LYLF paper applies: missing inds per genotype (geno) < 50%, missing data individuals (imiss) < 90%; geno < 40%, imiss < 70%; geno < 30%, imiss < 50%; geno < 5%, imiss < 25%
-- note LYLF paper applies depth and qual based filters at genotype level (minDP 5, minQUAL 20), applies mean DP (15) and mac (3), THEN filters by iterative NA filters, then appliers INFO based filters (i.e., the GATK recs), then applies the final missingness filter. WHY? It seems that GATK hard-filtering should be applied first as these are the recommended filters for low-qual SNPs and can therefore affect missingness at both locus and individual
+    - note LYLF paper applies depth and qual based filters at genotype level (minDP 5, minQUAL 20), applies mean DP (15) and mac (3), THEN filters by iterative NA filters, then appliers INFO based filters (i.e., the GATK recs), then applies the final missingness filter. WHY? It seems that GATK hard-filtering should be applied first as these are the recommended filters for low-qual SNPs and can therefore affect missingness at both locus and individual
 
 
 ## For invariant calls set
