@@ -9,4 +9,4 @@ module load anaconda/colsa
 
 conda activate PRISM
 
-srun Rscript ~/repo/neonectria_SNP/GxE/PRISM_calcs/tmin_tmax_ppt_dailys_site_extract.r
+srun Rscript ~/repo/neonectria_SNP/GxE/prism_calcs/tmin_tmax_ppt_dailys_site_extract.r
