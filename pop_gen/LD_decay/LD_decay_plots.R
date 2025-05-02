@@ -34,7 +34,7 @@ p1 = ggplot(all.R_tab, aes(x = dist/1000, y = r2)) +
     #scale_x_continuous(limits = c(NA, 100)) +
     labs(x = "Distance (Kb)", y = expression(paste("r"^2))) +
     my_gg_theme
-
+p1
 pdf("figures/pop_gen/LD_decay/all_spp.pdf", width = 20, height = 10)
 p1
 dev.off()
@@ -88,9 +88,11 @@ Nf_sliding_window = LD_sliding_window_mean(Nf.r_tab.sorted$r2, Nf.r_tab.sorted$d
 Nd_sliding_window = LD_sliding_window_mean(Nd.r_tab$r2, Nd.r_tab$dist, 1000, 250)
 Nc_sliding_window = LD_sliding_window_mean(Nc.r_tab$r2, Nc.r_tab$dist, 1000, 250)
 plot(Nf_sliding_window$mean_r2 ~ Nf_sliding_window$start_index)
+plot(Nf_sliding_window$quant90 ~ Nf_sliding_window$start_index)
 plot(Nd_sliding_window$mean_r2 ~ Nd_sliding_window$start_index)
+plot(Nd_sliding_window$quant90 ~ Nd_sliding_window$start_index)
 plot(Nc_sliding_window$mean_r2 ~ Nc_sliding_window$start_index)
-
+plot(Nc_sliding_window$quant90 ~ Nc_sliding_window$start_index)
 
 Nf_roll = data.frame(
     mean_r2 = roll_mean(x = Nf.r_tab$r2[order(Nf.r_tab$dist)], n = 1000, by = 500),
@@ -125,44 +127,6 @@ ggplot(all_roll %>% filter(mean_dist < 250000), aes(mean_dist, mean_r2)) +
     scale_x_continuous(limits = c(NA, 250000))
 
 
-
-p1 = ggplot(all_slide %>% filter(start_index < 100000), aes(start_index/1000, mean_r2)) +
-    geom_point(alpha = 0.5) +
-    facet_wrap(
-        ~factor(
-            spp, 
-            levels = c("Nf", "Nd", "Nc"), 
-            labels = c("N. faginata", "N. ditissima", "N. coccinea")
-        ), 
-        ncol = 1, 
-        scales = "free_y",
-        strip.position = "right"
-    ) +
-    geom_text(
-        data = data.frame(
-            spp = c("Nf", "Nd", "Nc"),
-            lab = c("N. faginata", "N. ditissima", "N. coccinea"),
-            x = rep(95,3),
-            y = c(0.045,0.115, 0.625)
-        ),
-        aes(x = x, y = y, label = lab)
-    ) +
-    my_gg_theme.def_size +
-    labs(x = "Pairwise SNP distance (Kbp)", y = expression(paste("Linkage disequilibrium (r"^2, ")")), title = "a") +
-    theme(
-        strip.background = element_blank(),
-        strip.placement = "outsdie",
-        strip.text = element_blank(),
-        plot.title = element_text(hjust = -0.125, vjust = -2)
-    ) +
-    ggh4x::facetted_pos_scales(
-        y = list(
-            scale_y_continuous(breaks = seq(0.01,0.05,0.01)),
-            scale_y_continuous(breaks = seq(0.04,0.12,0.02)), #this is the only one we change from default
-            scale_y_continuous(breaks = seq(0.48,0.64,0.04))
-        )
-    ) 
-p1
 
 range01 <- function(x, ...){(x-min(x))/(max(x)-min(x))}
 
@@ -226,11 +190,60 @@ Nd_half_max_dist = Nd_sliding_window.lt150$start_index[Nd_half_max_ind]
 Nc_half_max_dist = Nc_sliding_window.lt150$start_index[Nc_half_max_ind]
 
 Nf_half_max_dist
-#12251
+#12.64+
 Nd_half_max_dist
 #1751
 Nc_half_max_dist
 #NA (never reaches it)
+
+half_max_df = data.frame(
+    xint = c(
+        Nf_half_max_dist,
+        Nd_half_max_dist,
+        Nc_half_max_dist
+    ),
+    spp = c("Nf", "Nd", "Nc")
+)
+
+p1 = ggplot(all_slide %>% filter(start_index < 100000), aes(start_index/1000, mean_r2)) +
+    geom_point(alpha = 0.5) +
+    facet_wrap(
+        ~factor(
+            spp, 
+            levels = c("Nf", "Nd", "Nc"), 
+            labels = c("N. faginata", "N. ditissima", "N. coccinea")
+        ), 
+        ncol = 1, 
+        scales = "free_y",
+        strip.position = "right"
+    ) +
+    geom_text(
+        data = data.frame(
+            spp = c("Nf", "Nd", "Nc"),
+            lab = c("N. faginata", "N. ditissima", "N. coccinea"),
+            x = rep(95,3),
+            y = c(0.045,0.115, 0.625)
+        ),
+        aes(x = x, y = y, label = lab)
+    ) +
+    my_gg_theme.def_size +
+    labs(x = "Pairwise SNP distance (Kbp)", y = expression(paste("Linkage disequilibrium (r"^2, ")")), title = "a") +
+    theme(
+        strip.background = element_blank(),
+        strip.placement = "outsdie",
+        strip.text = element_blank(),
+        plot.title = element_text(hjust = -0.125, vjust = -2)
+    ) +
+    ggh4x::facetted_pos_scales(
+        y = list(
+            scale_y_continuous(breaks = seq(0.01,0.05,0.01)),
+            scale_y_continuous(breaks = seq(0.04,0.12,0.02)), #this is the only one we change from default
+            scale_y_continuous(breaks = seq(0.48,0.64,0.04))
+        )
+    ) +
+    geom_vline(data = half_max_df, aes(xintercept = xint/1000, group = spp), color = "steel blue")
+        
+p1
 
 p2 = ggplot(all_slide.lt150, 
        aes(
@@ -251,7 +264,7 @@ p2 = ggplot(all_slide.lt150,
     #) +
     geom_smooth(method = loess, method.args = list(degree = 2, span = 0.4))  +
     my_gg_theme.def_size +
-    scale_color_brewer(palette = "Set1") +
+    scale_color_manual(values = c("#d95f02", "#7570b3","#1b9e77")) +
     labs(x = "Pairwise SNP distance (Kbp)", y = "Scaled LD (range 0-1)", title = "b") +
     theme(
         legend.title = element_blank(),

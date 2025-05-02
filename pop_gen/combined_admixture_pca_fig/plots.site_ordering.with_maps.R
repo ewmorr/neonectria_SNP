@@ -2,6 +2,7 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(gridExtra)
+library(scatterpie)
 library(gtable)
 library(egg)
 source("library/ggplot_theme.txt")
@@ -54,7 +55,7 @@ p1 = ggplot(Nf.pca_scores.metadata,
     guides(color=guide_legend(ncol=2)) +
     my_gg_theme.def_size +
     theme(
-        plot.title = element_text(hjust = -0.19, vjust = -2) #hjust -0.2 for main, -0.17 for supp
+        plot.title = element_text(hjust = -0.2, vjust = -2, size = 20) #hjust -0.2 for main, -0.17 for supp
     ) 
 p1
 
@@ -74,7 +75,7 @@ p2 = ggplot(Nf.pca_scores.metadata,
     ) +
     my_gg_theme.def_size +
     theme(
-        plot.title = element_text(hjust = -0.19, vjust = -2) #hjust -0.19 for main, -0.17 for supp
+        plot.title = element_text(hjust = -0.2, vjust = -2, size = 20) #hjust -0.19 for main, -0.17 for supp
     )
 p2
 
@@ -89,7 +90,7 @@ p3 = ggplot(Nd.pca_scores.metadata,
             #)
         )
     ) +
-    geom_point(size = 2, position = position_jitter(width = 0.015)) + 
+    geom_point(position = position_jitter(width = 0.015)) + 
     scale_color_manual(values = Nd_site_cols.v) +
     scale_shape_manual(values = c(17,16)) +
     labs(
@@ -102,7 +103,7 @@ p3 = ggplot(Nd.pca_scores.metadata,
     guides(color=guide_legend(ncol=2)) +
     my_gg_theme.def_size +
     theme(
-        plot.title = element_text(hjust = -0.19, vjust = -2) #hjust -0.2 for main, -0.17 for supp
+        plot.title = element_text(hjust = -0.2, vjust = -2, size = 20) #hjust -0.2 for main, -0.17 for supp
     ) 
 p3
 
@@ -117,7 +118,7 @@ p4 = ggplot(Nd.pca_scores.metadata,
             #)
         )
     ) +
-    geom_point(size = 2, position = position_jitter(width = 0.015)) + 
+    geom_point(position = position_jitter(width = 0.015, height = 0.015)) + 
     scale_color_brewer(palette = "Set1") +
     scale_shape_manual(values = c(17,16)) +
     guides(shape = "none") + #comment for supp plot
@@ -130,7 +131,7 @@ p4 = ggplot(Nd.pca_scores.metadata,
     ) +
     my_gg_theme.def_size +
     theme(
-        plot.title = element_text(hjust = -0.19, vjust = -2) #hjust -0.19 for main, -0.17 for supp
+        plot.title = element_text(hjust = -0.205, vjust = -2, size = 20) #hjust -0.19 for main, -0.17 for supp
     )
 p4
 
@@ -147,43 +148,41 @@ p5 = ggplot(Nd.pca_scores.metadata, aes(MDS1, MDS2, color = clust)) +
     ) +
     my_gg_theme.def_size +
     theme(
-        plot.title = element_text(hjust = -0.19, vjust = -2) #hjust -0.19 for main, -0.17 for supp
+        plot.title = element_text(hjust = -0.20, vjust = -2, size = 20) #hjust -0.19 for main, -0.17 for supp
     )
 p5
 
+Nd.pca_scores.metadata %>% filter(Site == "NH.CCM")
 ####################################
-# evanno plots
+# admixture plots
 ####################################
-Nf.ev = read.table("data/Nf/structure/no_locData/evanno.r_format.txt", header = T)
-Nd.ev = read.table("data/Nd/structure/no_locPrior/evanno.r_format.txt", header = T)
 
-p6 = ggplot(Nf.ev %>% filter(K > 1 & K < 10), aes(x = K, y = Delta.K)) +
-    geom_point() +
-    geom_line() +
-    scale_x_continuous(breaks = c(2,4,6,8)) +
-    labs(title = "f", y = expression(Delta~K)) +
-    my_gg_theme.def_size +
-    theme(
-        plot.title = element_text(hjust = -0.19, vjust = -2)
-    )
-p6
-
-p7 = ggplot(Nd.ev %>% filter(K > 1 & K < 10), aes(x = K, y = Delta.K)) +
-    geom_point() +
-    geom_line() +
-    scale_x_continuous(breaks = c(2,4,6,8,10)) +
-    labs(title = "g", y = expression(Delta~K)) +
-    my_gg_theme.def_size +
-    theme(
-        plot.title = element_text(hjust = -0.19, vjust = -2)
-    )
-p7
-
-##############################
-#Structure
-##############################
+#metadata and ancestry 
+Nf.fam_info = read.table("data/Nf/final_tables/rm_dups/FINAL_snp.admixture.nosex", header = F)
+colnames(Nf.fam_info)[1] = "Sequence_label"
 Nf.sample_metadata = read.csv("data/sample_metadata/Nf_filtered.lat_lon_dur_inf.csv")
+Nf.sample_metadata = left_join(data.frame(Sequence_label = Nf.fam_info[,1]), Nf.sample_metadata)
+
+Nd.fam_info = read.table("data/Nd/final_tables/rm_dups/FINAL_snp.admixture.nosex", header = F)
+colnames(Nd.fam_info)[1] = "Sequence_label"
 Nd.sample_metadata = read.csv("data/sample_metadata/Nd_filtered.lat_lon_dur_inf.csv")
+Nd.sample_metadata = left_join(data.frame(Sequence_label = Nd.fam_info[,1]), Nd.sample_metadata)
+
+
+Nf.K_4 = read.table("data/Nf/admixture/FINAL_snp.admixture.4.Q", header = F)
+colnames(Nf.K_4) = paste0("Q", 1:ncol(Nf.K_4))
+Nf.K_4$Sequence_label = Nf.fam_info$Sequence_label
+Nf.K_4$K = 4
+Nf.K_4 = Nf.K_4  %>% 
+    pivot_longer(cols = starts_with("Q"), names_to = "ancestor", values_to = "Q")
+
+Nd.K_5 = read.table("data/Nd/admixture/FINAL_snp.admixture.5.Q", header = F)
+colnames(Nd.K_5) = paste0("Q", 1:ncol(Nd.K_5))
+Nd.K_5$Sequence_label = Nd.fam_info$Sequence_label
+Nd.K_5$K = 5
+Nd.K_5 = Nd.K_5  %>% 
+    pivot_longer(cols = starts_with("Q"), names_to = "ancestor", values_to = "Q")
+
 
 ################
 # sorting
@@ -214,7 +213,112 @@ Nd.state_order = Nd_states_dur$state[
     order(Nd_states_dur$Year_infection_observed.min, -Nd_states_dur$lon)
 ]
 
-# ancestry data
+Nf.state_order
+Nd.state_order
+
+Nf.K_4.clust = left_join(Nf.K_4, Nf_pca_clust) %>%
+    left_join(., Nf.pca_scores.metadata %>% select(Sequence_label, MDS1, duration_infection, state) )
+Nd.K_5.clust = left_join(Nd.K_5, Nd_pca_clust) %>%
+    left_join(., Nd.pca_scores.metadata %>% select(Sequence_label, MDS1, duration_infection, state, Tree_species) )
+
+ancestry_cols = RColorBrewer::brewer.pal(n = 9, "Set1")
+
+##########################################
+# structure plots using min centered data
+##########################################
+
+#FIRST REDOING ADMIXTURE PLOT WITH NF K=2
+Nf.K_2 = read.table("data/Nf/admixture/FINAL_snp.admixture.2.Q", header = F)
+colnames(Nf.K_2) = paste0("Q", 1:ncol(Nf.K_2))
+Nf.K_2$Sequence_label = Nf.fam_info$Sequence_label
+Nf.K_2$K = 2
+Nf.K_2 = Nf.K_2  %>% 
+    pivot_longer(cols = starts_with("Q"), names_to = "ancestor", values_to = "Q")
+
+Nf.K_2.clust = left_join(Nf.K_2, Nf_pca_clust) %>%
+    left_join(., Nf.pca_scores.metadata %>% select(Sequence_label, MDS1, duration_infection, state) )
+
+p6 = ggplot(Nf.K_2.clust, 
+                aes(
+                    x = reorder(Sequence_label, MDS1), 
+                    y = Q, 
+                    fill = ancestor
+                )
+) +
+    geom_bar(stat = "identity") +
+    facet_grid(
+        ~factor(state, 
+            levels = Nf.state_order,
+        ), 
+        scales = "free_x", 
+        space = "free_x",
+        switch = "x"
+    ) + 
+    scale_fill_brewer(palette = "Set1", guide = "none") +
+    my_gg_theme.def_size +
+    labs(
+        x = "Site",
+        y = "K = 2",
+        title = "h"
+    ) +
+    theme(
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        strip.background = element_blank(),
+        strip.text.x = element_blank(),
+        #strip.text.x = element_text(angle = 90, hjust = 1),
+        strip.placement = "outside",
+        axis.title.x = element_blank(),
+        plot.title = element_text(hjust = -0.017, vjust = -2.5, size = 20),
+        panel.spacing = unit(0.1,'lines'),
+        plot.margin = margin(t = -10, r = 5.5, b = -10, l = 5.5)
+    )
+p6
+p7 = ggplot(Nd.K_5.clust, 
+                aes(
+                    x = reorder(Sequence_label, MDS1), 
+                    y = Q, 
+                    fill = ancestor
+                )
+) +
+    geom_bar(stat = "identity") +
+    facet_grid(
+        ~factor(state, 
+            levels = Nd.state_order,
+        ), 
+        scales = "free_x", 
+        space = "free_x",
+        switch = "x"
+    ) + 
+    scale_fill_brewer(palette = "Paired", guide = "none") +
+    my_gg_theme.def_size +
+    labs(
+        x = "HCPC cluster (bars represent individuals)",
+        y = "K = 5",
+        title = "i"
+    ) +
+    theme(
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        strip.background = element_blank(),
+        strip.placement = "outside",
+        strip.text.x = element_blank(),
+        #strip.text.x = element_text(angle = 90, hjust = 1),
+        axis.title.x = element_blank(),
+        plot.title = element_text(hjust = -0.055, vjust = -2.5, size = 20),
+        panel.spacing = unit(0.1,'lines'),
+        plot.margin = margin(t = -10, r = 5.5, b = -10, l = 5.5)
+    )
+p7
+
+
+
+#################################################################
+# now moving on with structure plots
+
+#Nf.strK_2 = read.csv("data/Nf/structure/no_locData/K2_centered_on_min.csv")
 Nf.strK_2 = read.table("data/Nf/structure/no_locData/K2_ancestry.txt", header = T)
 
 Nf.strK_2$K = 2
@@ -222,6 +326,7 @@ Nf.strK_2 = Nf.strK_2  %>%
     #mutate(across(where(is.numeric), ~ scale(., center = F, scale = sd(.)) )) %>%
     pivot_longer(cols = starts_with("Q"), names_to = "ancestor", values_to = "Q")
 
+#Nd.strK_5 = read.csv("data/Nd/structure/no_locPrior/K5_centered_on_min.csv")
 Nd.strK_5 = read.table("data/Nd/structure/no_locPrior/K5_ancestry.txt", header = T)
 Nd.strK_5$K = 5
 Nd.strK_5 = Nd.strK_5  %>% 
@@ -240,8 +345,8 @@ ancestry_cols = RColorBrewer::brewer.pal(n = 3, "Set1")
 p8 = ggplot(Nf.strK_2.clust, # %>% filter(ancestor == "Q1"), 
                 aes(
                     x = reorder(Sequence_label, MDS1), 
-                    #y = log(Q*100+1), 
-                    y = Q,
+                    y = log(Q*100+1), 
+                    #y = Q,
                     fill = ancestor
                 )
 ) +
@@ -258,7 +363,7 @@ p8 = ggplot(Nf.strK_2.clust, # %>% filter(ancestor == "Q1"),
     my_gg_theme.def_size +
     labs(
         y = "K = 2",
-        title = "h"
+        title = "j"
     ) +
     theme(
         axis.text.x = element_blank(),
@@ -266,53 +371,18 @@ p8 = ggplot(Nf.strK_2.clust, # %>% filter(ancestor == "Q1"),
         axis.ticks = element_blank(),
         strip.background = element_blank(),
         strip.text.x = element_text(angle = 90, hjust = 1),
+        #strip.text.x = element_blank(),
         strip.placement = "outside",
         axis.title.x = element_blank(),
-        plot.title = element_text(hjust = -0.015, vjust = -0.25),
-        panel.spacing = unit(0.0,'lines')
+        plot.title = element_text(hjust = -0.015, vjust = -0.25, size = 20),
+        panel.spacing = unit(0.1,'lines'),
+        plot.margin = margin(t = -10, r = 5.5, b = 5.5, l = 5.5)
     )
 p8
 
-nd_str_cols = RColorBrewer::brewer.pal(n = 5, "Set2")
+nd_str_cols = RColorBrewer::brewer.pal(n = 5, "Paired")
 
 p9 = ggplot(Nd.strK_5.clust, 
-                aes(
-                    x = reorder(Sequence_label, MDS1), 
-                    #y = log(Q*100+1), 
-                    y = Q,
-                    fill = rev(ancestor)
-                )
-) +
-    geom_bar(stat = "identity", position = "fill") +
-    facet_grid(
-        ~factor(state, 
-            levels = Nd.state_order[c(1:4,16,5,7,6,8:10,17,18,12,11,14,13,15)]
-        ), 
-        scales = "free_x", 
-        space = "free_x",
-        switch = "x"
-    ) + 
-    scale_fill_manual(values = nd_str_cols[c(5,4,3,1,2)], guide = "none") +
-    #scale_fill_brewer(palette = "Set2", guide = "none") +
-    my_gg_theme.def_size +
-    labs(
-        y = "K = 5",
-        title = "i"
-    ) +
-    theme(
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        strip.background = element_blank(),
-        strip.text.x = element_text(angle = 90, hjust = 1),
-        strip.placement = "outside",
-        axis.title.x = element_blank(),
-        plot.title = element_text(hjust = -0.05, vjust = -0.25),
-        panel.spacing = unit(0.0,'lines')
-    )
-p9
-
-p10 = ggplot(Nd.strK_5.clust, 
                 aes(
                     x = reorder(Sequence_label, MDS1), 
                     y = log(Q*100+1), 
@@ -322,7 +392,8 @@ p10 = ggplot(Nd.strK_5.clust,
 ) +
     geom_bar(stat = "identity", position = "fill") +
     facet_grid(
-        ~factor(Tree_species
+        ~factor(state, 
+            levels = Nd.state_order,
         ), 
         scales = "free_x", 
         space = "free_x",
@@ -333,7 +404,7 @@ p10 = ggplot(Nd.strK_5.clust,
     my_gg_theme.def_size +
     labs(
         y = "K = 5",
-        title = "j"
+        title = "k"
     ) +
     theme(
         axis.text.x = element_blank(),
@@ -341,13 +412,19 @@ p10 = ggplot(Nd.strK_5.clust,
         axis.ticks = element_blank(),
         strip.background = element_blank(),
         strip.text.x = element_text(angle = 90, hjust = 1),
+        #strip.text.x = element_blank(),
         strip.placement = "outside",
         axis.title.x = element_blank(),
-        plot.title = element_text(hjust = -0.05, vjust = -0.25),
-        panel.spacing = unit(0.0,'lines')
+        plot.title = element_text(hjust = -0.055, vjust = -0.25, size = 20),
+        panel.spacing = unit(0.1,'lines'),
+        plot.margin = margin(t = -10, r = 5.5, b = 5.5, l = 5.5)
     )
-p10
+p9
 
+
+p10 = readRDS("figures/pop_gen/admixture/Nf.avg_map.rds")
+p11 = readRDS("figures/pop_gen/admixture/Nd.avg_map.rds")
+p10
 
 # setting up big plot
 gp1 = ggplotGrob(p1)
@@ -360,40 +437,62 @@ gp7 = ggplotGrob(p7)
 gp8 = ggplotGrob(p8)
 gp9 = ggplotGrob(p9)
 gp10 = ggplotGrob(p10)
+gp11 = ggplotGrob(p11)
 
 gp1 = set_panel_size(g = gp1, width = unit(3, "inches"), height = unit(3, "inches"))
 gp2 = set_panel_size(g = gp2, width = unit(3, "inches"), height = unit(3, "inches"))
 gp3 = set_panel_size(g = gp3, width = unit(3, "inches"), height = unit(3, "inches"))
 gp4 = set_panel_size(g = gp4, width = unit(3, "inches"), height = unit(3, "inches"))
 gp5 = set_panel_size(g = gp5, width = unit(3, "inches"), height = unit(3, "inches"))
-gp6 = set_panel_size(g = gp6, width = unit(3, "inches"), height = unit(3, "inches"))
-gp7 = set_panel_size(g = gp7, width = unit(3, "inches"), height = unit(3, "inches"))
 
-# we actually don't need to set the panel size bc each facet will be treated individually
+# we actually don't need to set the panel size for the remaining bc each facet will be treated individually
 # across the whole set once they are g-bound
 # setting the panel size makes them all *equal* instead of variable
 #gp6 = set_panel_size(g = gp6, width = unit(7.7, "inches"))
 #gp7 = set_panel_size(g = gp7, width = unit(2.3, "inches"))
 
-gpTop = cbind(gp2, gp1, gp5, gp3, gp4, gp6, gp7)
-gpBottom = cbind(gp8, gp9, gp10)
+gpTop = cbind(gp2, gp1, gp5, gp3, gp4)
+#add a few spacer cols to the left of each map
+gp10 = gtable_add_cols(gp10, widths = rep(unit(1, "points"),20), pos = 1)
+gp11 = gtable_add_cols(gp11, widths = rep(unit(1, "points"),25), pos = 1)
+
+gpTopMiddle = cbind(gp10, gp11)
+gpBotMiddle = cbind(gp6, gp7)
+gpBottom = cbind(gp8, gp9)
+
+plot(gpTop)
+plot(gpTopMiddle)
+plot(gpBotMiddle)
+plot(gpBottom)
 
 ncol(gpTop)
-ncol(gpBottom)
+ncol(gpTopMiddle)
+ncol(gpBotMiddle)
 ncol(gpBottom)-ncol(gpTop)
+#need to add 41 cols
+ncol(gpBottom)-ncol(gpTopMiddle)
+#need to add 80 cols
 
-gpTop.add = gtable_add_cols(gpTop, widths = rep(unit(1, "points"),22), pos = 1)
+gpTop.add = gtable_add_cols(gpTop, widths = rep(unit(0, "points"),20), pos = 1)
 ncol(gpTop.add)
-gpTop.add = gtable_add_cols(gpTop.add, widths = rep(unit(1, "points"),22), pos = -1)
-
-
+gpTop.add = gtable_add_cols(gpTop.add, widths = rep(unit(0, "points"),21), pos = -1)
 ncol(gpTop.add)
-ncol(gpBottom)
 
-#rbind(gpTop, gbBottom.add)
-#gpAll = rbind(gpTop, gbBottom.add)
+gpTopMiddle.add = gtable_add_cols(gpTopMiddle, widths = rep(unit(0, "points"),10), pos = 1)
+ncol(gpTopMiddle.add)
+gpTopMiddle.add = gtable_add_cols(gpTopMiddle.add, widths = rep(unit(0, "points"),25), pos = -1)
+ncol(gpTopMiddle.add)
 
 
-pdf("figures/pop_gen/pca_structure_evanno.site_order.pdf", width = 33, height = 8)
-grid.arrange(gpTop.add, gpBottom, heights = c(0.6,0.4))
+gpAll = rbind(gpTop.add, gpTopMiddle.add, gpBotMiddle, gpBottom)
+
+
+
+#pdf("figures/pop_gen/pca.admixture_maps.admixture_structure_site_order.pdf", width = 25.5, height = 14.5)
+#grid.arrange(gpTop.add, gpTopMiddle.add, gpBotMiddle, gpBottom, heights = c(0.25,0.4475,0.07,0.11))
+#dev.off()
+
+
+pdf("figures/pop_gen/pca.admixture_maps.admixture_structure_site_order.pdf", width = 25.5, height = 15)
+grid.arrange(gpTop.add, gpTopMiddle.add, gpBotMiddle, gpBottom, heights = c(0.25,0.435,0.09,0.125))
 dev.off()

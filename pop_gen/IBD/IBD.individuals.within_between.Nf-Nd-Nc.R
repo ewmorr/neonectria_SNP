@@ -77,11 +77,12 @@ rownames(coords.Nc) = coords.Nc$samp
 
 #For now we only want to compare isolates collected in the modern era
 # We may use the older isolates for a different test
-coords.Nf$lat[coords.Nf$collection_period == "early"] = NA
-coords.Nf$lon[coords.Nf$collection_period == "early"] = NA
 
-coords.Nd$lat[coords.Nd$collection_period == "early"] = NA
-coords.Nd$lon[coords.Nd$collection_period == "early"] = NA
+#coords.Nf$lat[coords.Nf$collection_period == "early"] = NA
+#coords.Nf$lon[coords.Nf$collection_period == "early"] = NA
+
+#coords.Nd$lat[coords.Nd$collection_period == "early"] = NA
+#coords.Nd$lon[coords.Nd$collection_period == "early"] = NA
 
 #calcualte geographic distance
 #old bad way #dist(dismo::Mercator(coords.Nf[,c("lon", "lat")]))
@@ -150,10 +151,13 @@ sum(Nf.Dgen.long$comp == "within", na.rm = T)
 #341
 sum(Nf.Dgen.long$comp == "between", na.rm = T)
 #5987
+#6214 with early isolates
 sum(Nd.Dgen.long$comp == "within", na.rm = T)
 #20
+#23 with early
 sum(Nd.Dgen.long$comp == "between", na.rm = T)
 #280
+#412 with early
 Nc.Dgen.long[Nc.Dgen.long$comp == "within",]
 sum(Nc.Dgen.long$comp == "within", na.rm = T)
 #3
@@ -189,6 +193,7 @@ Nc.within.site_n = Nc.withins.site$site %>% unique %>% length
 comp.withins = rbind(Nf.withins.site, Nd.withins.site, Nc.withins.site)
 nrow(comp.withins)
 #364
+#367 with early
 
 #between
 Nf.betweens = Nf.Dgen.long[Nf.Dgen.long$comp == "between" & !is.na(Nf.Dgen.long$value),]
@@ -237,6 +242,7 @@ Nc.betweens.site.n = paste(Nc.betweens.site$site1, Nc.betweens.site$site2, sep =
 comp.betweens = rbind(Nf.betweens, Nd.betweens, Nc.betweens)
 nrow(comp.betweens)
 #6274
+# 6633 with early
 
 #################
 #aov within sites
@@ -350,6 +356,27 @@ for(i in spps){
 }
 options(warn=1)
 
+boot_df
+# without early
+# 
+#  spp    comp   med.boot  lower.CI   upper.CI
+#1  Nf  within  3.5619717  3.470350  3.6439682
+#2  Nd  within  9.2735259  9.056061  9.4319463
+#3  Nc  within  0.7778024  0.768002  0.7964116
+#4  Nf between  4.0208136  4.012703  4.0287666
+#5  Nd between  9.2552116  9.168552  9.3158062
+#6  Nc between 13.3665252 12.637448 13.8768721
+
+# with early
+# 
+#  spp    comp   med.boot  lower.CI   upper.CI
+#1  Nf  within  3.5613070  3.471278  3.6436189
+#2  Nd  within  9.2234957  9.024972  9.3784264
+#3  Nc  within  0.7778024  0.768002  0.7964116
+#4  Nf between  4.0270433  4.019031  4.0349617
+#5  Nd between  9.1931483  9.132322  9.2393101
+#6  Nc between 13.3657376 12.642678 13.8749629
+
 ################
 ################
 #plots
@@ -432,7 +459,7 @@ p2 = ggplot(all.Dgen %>% filter(comp == "between"),
     )
 p2
 
-pdf("figures/pop_gen/IBD/within-between.pdf", width = 16, height = 7)
+pdf("figures/pop_gen/IBD/within-between.include_early.pdf", width = 16, height = 7)
 grid.arrange(p1,p2, ncol = 2)
 dev.off()
 
@@ -444,7 +471,7 @@ n_tab.wnbn = data.frame(
         paste("site pairs\nn =", c(Nf.betweens.site.n, Nd.betweens.site.n, Nc.betweens.site.n))
     ),
     spp = rep(c("Nf", "Nd", "Nc"), 2),
-    y = c(40.5, 4.38, 2.625, 750, 25, 3.2),
+    y = c(40.5, 4.38, 2.625, 750, 40, 3.2),
     comp = c(rep("within", 3), rep("between", 3))
 ) #the y is nicely aligned between cols at 7 inch height pdf
 
@@ -469,7 +496,7 @@ p1 = ggplot(all.Dgen,
         switch = "y",
         labeller = labeller(
             .rows = sppNames <- c("Nf" = "N. faginata", "Nd" = "N. ditissima", "Nc" = "N. coccinea"),
-            .cols = compNames <- c("within" = "within site comparisons", "between" = "between site comparisons")
+            .cols = compNames <- c("within" = "Within site comparisons", "between" = "Between site comparisons")
         )
     ) +    
     ggh4x::facetted_pos_scales(
@@ -477,14 +504,15 @@ p1 = ggplot(all.Dgen,
             scale_y_continuous(breaks = c(0, 15, 30, 45)),
             scale_y_continuous(breaks = c(0, 300, 600, 900)),
             scale_y_continuous(breaks = c(0, 2, 4, 6)),
-            scale_y_continuous(breaks = c(0, 10,20, 30)),
+            #scale_y_continuous(breaks = c(0, 10,20, 30)),
+            scale_y_continuous(breaks = c(0, 15,30, 45)),
             scale_y_continuous(breaks = c(0, 1, 2, 3)),
             scale_y_continuous(breaks = c(0, 1,2,3,4))
         )
     ) +
     my_gg_theme.def_size +
     labs(
-        x = "Hamming distance (SNPs per Kb)", 
+        x = expression(paste("Hamming distance (SNPs Kb"^-1,")")), 
         y = "Pairwise comparisons of individuals (count)", 
         title = "a"
     ) +
@@ -495,7 +523,7 @@ p1 = ggplot(all.Dgen,
         strip.placement = "outside"
     )
 p1
-pdf("figures/pop_gen/IBD/within-between.grid.pdf", width = 7, height = 4)
+pdf("figures/pop_gen/IBD/within-between.grid.include_early.pdf", width = 7, height = 4)
 p1
 dev.off()
 
@@ -527,7 +555,7 @@ p2 = ggplot(boot_df,
     scale_y_continuous(breaks = c(0,5,10), limits = c(0,NA)) +
     labs(
         shape = "Site comparison", 
-        y = "Hamming distance (SNPs per Kb)",
+        y = expression(paste("Hamming distance (SNPs Kb"^-1,")")),
         title = "b"
     ) +
     theme(
@@ -543,7 +571,7 @@ p2 = ggplot(boot_df,
 p2
 
 
-pdf("figures/pop_gen/IBD/within-between.CIs.pdf", width = 10, height = 4)
+pdf("figures/pop_gen/IBD/within-between.CIs.include_early.pdf", width = 10, height = 4)
 #p1 + p2
 grid.arrange(p1,p2,ncol = 2, widths = c(0.7,0.3))
 dev.off()
@@ -580,7 +608,7 @@ p2 = ggplot(boot_df,
     labs(
         shape = "Site comparison", 
         color = "Site comparison",
-        y = "Hamming distance (SNPs per Kb)",
+        y = expression(paste("Hamming distance (SNPs Kb"^-1,")")),
         title = "b"
     ) +
     theme(
@@ -595,7 +623,7 @@ p2 = ggplot(boot_df,
     ) 
 p2
 
-pdf("figures/pop_gen/IBD/within-between.CIs.color.pdf", width = 10, height = 4)
+pdf("figures/pop_gen/IBD/within-between.CIs.color.include_early.pdf", width = 10, height = 4)
 #p1 + p2
 grid.arrange(p1,p2,ncol = 2, widths = c(0.7,0.3))
 dev.off()

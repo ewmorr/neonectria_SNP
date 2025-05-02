@@ -105,15 +105,15 @@ cor.test(pi_dat.meta$pi_mean[pi_dat.meta$state != "VA"], pi_dat.meta$duration_in
 plot(theta_mean ~ duration_infection, pi_dat.meta)
 cor(pi_dat.meta$theta_mean, pi_dat.meta$duration_infection)
 cor.test(pi_dat.meta$theta_mean, pi_dat.meta$duration_infection)
-#r = 0.3388946 
-#p-value = 0.2359
+#r = 0.3399855 
+#p-value = 0.2343
 #
 #
 plot(theta_mean ~ duration_infection, pi_dat.meta %>% filter(state != "VA"))
 cor(pi_dat.meta$theta_mean[pi_dat.meta$state != "VA"], pi_dat.meta$duration_infection[pi_dat.meta$state != "VA"])
 cor.test(pi_dat.meta$theta_mean[pi_dat.meta$state != "VA"], pi_dat.meta$duration_infection[pi_dat.meta$state != "VA"])
-#r = -0.01820871  
-#p-value = 0.9529
+#r = -0.01716047  
+#p-value = 0.9556
 #
 #
 #tajima's D
@@ -154,7 +154,7 @@ cor(all_dat$TajimaD.snpR, all_dat$tajD_mean)
 cor.test(all_dat$TajimaD.snpR, all_dat$tajD_mean)
 #far from significant correlation in any case
 #
-# I think we trust pixy because the calculations make sense and are based on 
+# we trust pixy because the calculations make sense and are based on 
 # established software (skikit-allel and pixy)
 
 #vk D
@@ -215,6 +215,72 @@ site_cols = site_cols.df$colors
 names(site_cols) = site_cols.df$state
 
 
+mean(all_dat$pi_mean)
+sd(all_dat$pi_mean)
+sd(all_dat$pi_mean)/mean(all_dat$pi_mean)
+all_dat$pi_mean[13]/mean(all_dat$pi_mean)
+all_dat$pi_mean[13]
+
+
+
+
+all_dat$pi_mean[13]
+(all_dat$pi_mean[13] - mean(all_dat$pi_mean))/mean(all_dat$pi_mean)
+#-0.5103191
+(all_dat$theta_mean[13] - mean(all_dat$theta_mean))/mean(all_dat$theta_mean)
+#-0.2476351
+(all_dat$tajD_mean[13] - mean(all_dat$tajD_mean))/mean(all_dat$tajD_mean)*-1
+#-2.918118
+(-3.99 - -1.87)/1.87
+-1.13369
+
+#st devs
+abs(all_dat$pi_mean[13] - mean(all_dat$pi_mean))/sd(all_dat$pi_mean)
+# 2.97744
+abs(all_dat$theta_mean[13] - mean(all_dat$theta_mean))/sd(all_dat$theta_mean)
+# 2.234939
+abs(all_dat$tajD_mean[13] - mean(all_dat$tajD_mean))/sd(all_dat$tajD_mean)
+# 3.177162
+
+#st errs
+abs(all_dat$pi_mean[13] - mean(all_dat$pi_mean))/(sd(all_dat$pi_mean)/sqrt(length(all_dat$pi_mean)))
+# 11.14056
+abs(all_dat$theta_mean[13] - mean(all_dat$theta_mean))/(sd(all_dat$theta_mean)/sqrt(length(all_dat$theta_mean)))
+# 8.362375
+abs(all_dat$tajD_mean[13] - mean(all_dat$tajD_mean))/(sd(all_dat$tajD_mean)/sqrt(length(all_dat$tajD_mean)))
+# 11.88785
+
+#st errs
+abs(all_dat$pi_mean[6] - mean(all_dat$pi_mean))/(sd(all_dat$pi_mean)/sqrt(length(all_dat$pi_mean)))
+# 3.659834
+abs(all_dat$theta_mean[6] - mean(all_dat$theta_mean))/(sd(all_dat$theta_mean)/sqrt(length(all_dat$theta_mean)))
+# 5.077269
+abs(all_dat$tajD_mean[6] - mean(all_dat$tajD_mean))/(sd(all_dat$tajD_mean)/sqrt(length(all_dat$tajD_mean)))
+# 1.621844
+
+#st errs
+abs(all_dat$pi_mean[14] - mean(all_dat$pi_mean))/(sd(all_dat$pi_mean)/sqrt(length(all_dat$pi_mean)))
+# 2.355981
+abs(all_dat$theta_mean[14] - mean(all_dat$theta_mean))/(sd(all_dat$theta_mean)/sqrt(length(all_dat$theta_mean)))
+# 2.704769
+abs(all_dat$tajD_mean[14] - mean(all_dat$tajD_mean))/(sd(all_dat$tajD_mean)/sqrt(length(all_dat$tajD_mean)))
+# 0.1214257
+
+
+
+(all_dat$pi_mean[6] - mean(all_dat$pi_mean))/mean(all_dat$pi_mean)
+#-0.1676472
+(all_dat$theta_mean[6] - mean(all_dat$theta_mean))/mean(all_dat$theta_mean)
+#-0.1503532
+abs(all_dat$pi_mean[6] - mean(all_dat$pi_mean))/sd(all_dat$pi_mean)
+#0.9781318
+(all_dat$pi_mean[14] - mean(all_dat$pi_mean))/mean(all_dat$pi_mean)
+#-0.1079211
+(all_dat$theta_mean[14] - mean(all_dat$theta_mean))/mean(all_dat$theta_mean)
+#-0.08009634
+abs(all_dat$pi_mean[14] - mean(all_dat$pi_mean))/sd(all_dat$pi_mean)
+#0.6296623
+
 p1 = ggplot(all_dat, aes(x = duration_infection, y = pi_mean)) +
     geom_smooth(method = "lm", color="black") +
     geom_point(aes(fill = state), size = 3, shape = 21) +
@@ -239,8 +305,8 @@ p1 = ggplot(all_dat, aes(x = duration_infection, y = pi_mean)) +
     ) +
     annotate(
         geom = "text",
-        x = max(all_dat.cols$duration_infection),
-        y = min(all_dat.cols$pi_mean),
+        x = max(all_dat$duration_infection),
+        y = min(all_dat$pi_mean),
         hjust = 1,
         label = expression(paste("r = 0.55, ", italic(P), " = 0.04"))
     ) +
@@ -258,9 +324,9 @@ p1 = ggplot(all_dat, aes(x = duration_infection, y = pi_mean)) +
     scale_fill_manual(values = site_cols, guide = "none") +
     labs(
         x = "Duration infestation (years)", 
-        y = expression(paste(pi, " (SNPs Kb"^-1, ")")),
+        y = expression(paste(pi%*%10^3, " (SNPs Kb"^-1, ")")),
         fill ="Site",
-        "a"
+        title = "a"
     ) +
     annotate(
         geom = "text",
@@ -271,7 +337,7 @@ p1 = ggplot(all_dat, aes(x = duration_infection, y = pi_mean)) +
     ) +
     my_gg_theme.def_size +
     theme(
-        plot.title = element_text(hjust= -0.1, vjust = -1)
+        plot.title = element_text(hjust= -0.175, vjust = -1, size = 15)
     )
 p1
 
@@ -282,9 +348,9 @@ p2 = ggplot(all_dat, aes(x = duration_infection, y = theta_mean)) +
     scale_fill_manual(values = site_cols, guide = "none") +
     labs(
         x = "Duration infestation (years)", 
-        y = expression(paste(theta[italic(W)], " (SNPs Kb"^-1,")")),
+        y = expression(paste(theta[italic(W)]%*%10^3, " (SNPs Kb"^-1,")")),
         fill ="Site",
-        "b"
+        title = "b"
     ) +
     annotate(
         geom = "text",
@@ -295,7 +361,7 @@ p2 = ggplot(all_dat, aes(x = duration_infection, y = theta_mean)) +
     ) +
     my_gg_theme.def_size +
     theme(
-        plot.title = element_text(hjust= -0.1, vjust = -1)
+        plot.title = element_text(hjust= -0.175, vjust = -1, size = 15)
     )
 p2
 
@@ -308,7 +374,7 @@ p3 = ggplot(all_dat, aes(x = duration_infection, y = tajD_mean)) +
         x = "Duration infestation (years)", 
         y = "Tajima's D",
         fill ="Site",
-        "c"
+        title = "c"
     ) +
     annotate(
         geom = "text",
@@ -319,11 +385,11 @@ p3 = ggplot(all_dat, aes(x = duration_infection, y = tajD_mean)) +
     ) +
     my_gg_theme.def_size +
     theme(
-        plot.title = element_text(hjust= -0.1, vjust = -1)
+        plot.title = element_text(hjust= -0.1275, vjust = -1, size = 15)
     )
 p3
 
-pdf("figures/pop_gen/pixy/pi_theta_D.pixy.pdf", width = 14, height = 4.1)
+pdf("figures/pop_gen/pixy/pi_theta_D.pixy.pdf", width = 15, height = 4.5)
 grid.arrange(p1,p2,p3,widths = c(0.315,0.315,0.37))
 dev.off()
 

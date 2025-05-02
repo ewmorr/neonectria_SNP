@@ -11,8 +11,8 @@ state_n %>% print(n = Inf)
 n_min = 4
 low_n = state_n %>% filter(n < n_min) %>% pull(state)
 
-fst.dist = readRDS("data/Nf/pixy/windowed_10kb/fst_dist.window_avg.rds")
-#fst.dist = readRDS("data/Nf/pixy/whole_contig/fst_dist.rds")
+#fst.dist = readRDS("data/Nf/pixy/windowed_10kb/fst_dist.window_avg.rds")
+fst.dist = readRDS("data/Nf/pixy/whole_contig/fst_dist.rds")
 fst.mat = as.matrix(fst.dist) 
 fst.mat[upper.tri(fst.mat)] = NA
 diag(fst.mat) = NA
@@ -21,6 +21,7 @@ fst.mat %>%
     as.data.frame %>% 
     rownames_to_column("pop1") %>%
     pivot_longer(-pop1, names_to = "pop2", values_to = "Fst") -> fst.df
+fst.mat
 
 factor_order = rownames(fst.mat)
 factor_order2 = c("VA", "NH.CW", "WV", factor_order[!factor_order %in% c("VA", "NH.CW", "WV")])

@@ -70,13 +70,14 @@ rownames(dur.Nd) = dur.Nd$samp
 
 #For now we only want to compare isolates collected in the modern era
 # We may use the older isolates for a different test
-dur.Nf$lat[dur.Nf$collection_period == "early"] = NA
-dur.Nf$lon[dur.Nf$collection_period == "early"] = NA
-dur.Nf$dur_inf[dur.Nf$collection_period == "early"] = NA
 
-dur.Nd$lat[dur.Nd$collection_period == "early"] = NA
-dur.Nd$lon[dur.Nd$collection_period == "early"] = NA
-dur.Nd$dur_inf[dur.Nd$collection_period == "early"] = NA
+#dur.Nf$lat[dur.Nf$collection_period == "early"] = NA
+#dur.Nf$lon[dur.Nf$collection_period == "early"] = NA
+#dur.Nf$dur_inf[dur.Nf$collection_period == "early"] = NA
+
+#dur.Nd$lat[dur.Nd$collection_period == "early"] = NA
+#dur.Nd$lon[dur.Nd$collection_period == "early"] = NA
+#dur.Nd$dur_inf[dur.Nd$collection_period == "early"] = NA
 
 #calculate geographic distance and age dif
 Nf.Dgeo <- distm(x = dur.Nf[,c("lon", "lat")], fun = distVincentyEllipsoid)
@@ -101,11 +102,13 @@ Nd.Dgeo = as.dist(Nd.Dgeo/1000)
 #set zero dists to NA (within site comps) AND selfs (diag)
 sum(Nf.Dgeo == 0, na.rm = T)
 #341
+#no change with early
 Nf.Dgeo[Nf.Dgeo == 0] = NA
 sum(Nf.Dgeo == 0, na.rm = T)
 
 sum(Nd.Dgeo == 0, na.rm = T)
 #20
+# 23 with early
 Nd.Dgeo[Nd.Dgeo == 0] = NA
 
 #make dur dist class
@@ -137,26 +140,38 @@ sum(is.na(Nd.Dgeo))
 mantel(Dgen.Nf, Nf.Dgeo, na.rm = T)
 #Mantel statistic r: 0.2467
 #Significance: 0.001
+#with early
+#Mantel statistic r: 0.2538 
+#      Significance: 0.001 
+
 mantel(Dgen.Nd, Nd.Dgeo, na.rm = T)
 #Mantel statistic r: -0.09242
 #Significance: 0.788
+#with early
+#Mantel statistic r: -0.1145 
+#      Significance: 0.89 
 
 mantel(Dgen.Nf, log(Nf.Dgeo), na.rm = T)
 #Mantel statistic r: 0.2304
 #Significance: 0.001
 mantel(Dgen.Nd, log(Nd.Dgeo), na.rm = T)
-#Mantel statistic r: -0.04788
-#Significance: 0.628
+#Mantel statistic r: -0.1145
+#Significance: 0.887
 
 ####################
 #Mantel duration dist
 mantel(Dgen.Nf, Nf.Ddur, na.rm = T)
 #Mantel statistic r: 0.2144 
 #Significance: 0.001 
+##with early
+#Mantel statistic r: 0.2045 
+#      Significance: 0.001 
 mantel(Dgen.Nd, Nd.Ddur, na.rm = T)
 #Mantel statistic r: 0.01163 
 #Significance: 0.454 
-
+##with early
+#Mantel statistic r: 0.02412 
+#      Significance: 0.365 
 
 #########################
 #long format for plotting
@@ -412,7 +427,7 @@ p3 = ggplot(Nf.long, aes(x = durDif, y = SNPsPerKb)) +
     labs(x = "Difference in infestation duration (years)", y = "", title = "b") +
     annotate(
         geom = "text", 
-        label = expr(paste("Mantel r = ", !!Nf.dur.mantel.stat, ", ", italic("P"), " = ", !!Nf.dur.mantel.sig)),
+        label = expr(paste("Mantel r = ", !!Nf.dur.mantel.stat, "0, ", italic("P"), " = ", !!Nf.dur.mantel.sig)),
         x = max(Nf.long$durDif),#61,
         y = min(Nf.long$SNPsPerKb),#2.5,
         hjust = 1
@@ -455,7 +470,7 @@ p5 = ggplot(Nf_pop.long, aes(x = km, y = dxy*10^3)) +
     geom_smooth(method = "lm", linetype = 1, color = "black", se = T) +
     geom_point(shape = 1) +
     labs(x = "Geographic distance (km)", 
-         y = expression(paste(d[xy], " (SNPs Kb"^-1,")")), 
+         y = expression(paste(d[xy]%*%10^3, " (SNPs Kb"^-1,")")), 
          title = "e"
     ) +
     annotate(
@@ -506,10 +521,10 @@ gp6 = ggplotGrob(p6)
 gcol1 = rbind(gp1, gp2, gp5)
 gcol2 = rbind(gp3, gp4, gp6)
 
-pdf("figures/pop_gen/IBD/IBD_durationInfection.six_panel.pdf", width = 10, height = 10)
+pdf("figures/pop_gen/IBD/IBD_durationInfection.six_panel.include_early.pdf", width = 10, height = 10)
 grid.arrange(gcol1, gcol2, ncol = 2, widths = c(0.525, 0.475))
 dev.off()
 
-png("figures/pop_gen/IBD/IBD_durationInfection.six_panel.png", width = 10, height = 10, units = "in", res = 300)
+png("figures/pop_gen/IBD/IBD_durationInfection.six_panel.include_early.png", width = 10, height = 10, units = "in", res = 300)
 grid.arrange(gcol1, gcol2, ncol = 2, widths = c(0.525, 0.475))
 dev.off()

@@ -784,3 +784,20 @@ bcftools view -m2 -M2 -v snps FINAL_snp.mac_ge2.recode.vcf.gz -Oz -o FINAL_snp.m
 # After final filtration we filter the metadata to only the samples retained
 #
 # metadata_collate/filter_to_retained_samples.R
+
+#############################################################################
+#############################################################################
+# After performing pop gen analysis
+# we discover that most of the samples are in a single PCA/STRUCTURE/ADMIXTURE cluster
+# we will isolate these samples for LFMM analyses (and pixy genome scan with invariant)
+# to avoid issues with "allele surfing"
+
+#
+
+cd ~/repo/neonectria_SNP/data/Nf/final_tables/rm_dups/
+bcftools view -S ../../filtering_lists/PCA_cluster_2_ids.txt FINAL_snp.mac_ge2.biallele.gwas_analyses.vcf.gz -Oz -o FINAL_snp.gwas_analyses.cluster2.vcf.gz
+bcftools view -S ../../filtering_lists/PCA_cluster_2_ids.txt FINAL_invariant.nuclear.vcf.gz -Oz -o FINAL_invariant.nuclear.cluster2.vcf.gz
+
+cd ~/repo/neonectria_SNP/data/Nf/final_tables/rm_dups/
+bcftools view -S ../../filtering_lists/PCA_cluster_2_ids_no_NC.txt FINAL_snp.mac_ge2.biallele.gwas_analyses.vcf.gz -Oz -o FINAL_snp.gwas_analyses.cluster2_no_NC.vcf.gz
+bcftools view -S ../../filtering_lists/PCA_cluster_2_ids_no_NC.txt FINAL_invariant.nuclear.vcf.gz -Oz -o FINAL_invariant.nuclear.cluster2_no_NC.vcf.gz

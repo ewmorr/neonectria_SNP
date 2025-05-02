@@ -1,9 +1,10 @@
-require(tidyverse)
-require(RColorBrewer)
-source("~/ggplot_theme.txt")
+library(dplyr)
+library(tidyr)
+#library(RColorBrewer)
+#source("~/ggplot_theme.txt")
 
 #saveRDS(sites_climate_list, "intermediate_RDS/sites_daily_tmin_tmax_20072018.list.rds")
-sites_climate_list.df = readRDS(file = "sample_metadata/sites_daily_tmin_tmax_ppt_20072018.df.rds")
+sites_climate_list.df = readRDS(file = "data/PRISM_dailies/sites_daily_tmin_tmax_ppt_20072018.df.rds")
 
 #dates
 sites_climate_list.df$year = substr(sites_climate_list.df$day, 1, 4) %>% as.numeric
@@ -141,12 +142,12 @@ sites_climate.seasonal_summaries.means = sites_climate.seasonal_summaries %>%
 
 )
 
-saveRDS(sites_climate.seasonal_summaries, file = "sample_metadata/summarized_12_year_climate_dailys.rds")
-saveRDS(sites_climate.seasonal_summaries.means, file = "sample_metadata/summarized_12_year_climate_dailys.means.rds")
+saveRDS(sites_climate.seasonal_summaries, file = "data/PRISM_dailies/summarized_12_year_climate_dailys.rds")
+saveRDS(sites_climate.seasonal_summaries.means, file = "data/PRISM_dailies/summarized_12_year_climate_dailys.means.rds")
 
-write.table(sites_climate.seasonal_summaries, file = "sample_metadata/summarized_12_year_climate_dailys.txt", quote = F, row.names = F, sep = "\t")
-write.table(sites_climate.seasonal_summaries.means, file = "sample_metadata/summarized_12_year_climate_dailys.means.txt", quote = F, row.names = F, sep = "\t")
+write.table(sites_climate.seasonal_summaries, file = "data/PRISM_dailies/summarized_12_year_climate_dailys.txt", quote = F, row.names = F, sep = "\t")
+write.table(sites_climate.seasonal_summaries.means, file = "data/PRISM_dailies/summarized_12_year_climate_dailys.means.txt", quote = F, row.names = F, sep = "\t")
 
 sites_climate.seasonal_summaries.means.wide = sites_climate.seasonal_summaries.means %>% pivot_wider(names_from = season, values_from = c(-Site, -season))
 
-write.table(sites_climate.seasonal_summaries.means.wide, file = "sample_metadata/site_climate.GDD.txt", quote = F, row.names = F, sep = "\t")
+write.table(sites_climate.seasonal_summaries.means.wide, file = "data/PRISM_dailies/site_climate.GDD.txt", quote = F, row.names = F, sep = "\t")

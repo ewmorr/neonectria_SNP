@@ -35,7 +35,7 @@ scale_dat = read.csv("data/sample_metadata/Cale_Morin-BeechScaleDatesCanadaUS.cs
 scale_dat = scale_dat[,1:4]
 head(scale_dat)
 all.counties.scale_slice = all.counties %>% 
-    filter(PRVSTTNAME %in% c(scale_dat$PRVSTTNAME, "Kentucky", "Illinois", "Indiana", "Georgia", "Alabama", "South Carolina", "Iowa", "Mississippi", "Arkansas", "Missouri"))
+    filter(PRVSTTNAME %in% c(scale_dat$PRVSTTNAME, "Kentucky", "Illinois", "Indiana", "Georgia", "Alabama", "South Carolina", "Iowa", "Mississippi", "Arkansas", "Missouri", "Delaware"))
 nrow(all.counties.scale_slice)
 nrow(scale_dat)
 #check to see if we pick up all the counties
@@ -116,6 +116,13 @@ Nd.meta_n = Nd.meta %>%
     group_by(state, lat, lon) %>% 
     summarize(n = n())
 Nd.meta_n$spp = "Nd"
+
+meta_for_table.Nd = Nd.meta_n %>% select(-spp)
+meta_for_table.Nf = Nf.meta_n %>% select(-spp)
+colnames(meta_for_table.Nd)[4] = "Nd"
+colnames(meta_for_table.Nf)[4] = "Nf"
+meta_for_table = full_join(meta_for_table.Nf, meta_for_table.Nd)
+write.csv(meta_for_table, "data/sample_metadata/site_latLon_spp_n.csv")
 
 meta_n = rbind(Nf.meta_n, Nd.meta_n)
 meta_n %>% print(n = Inf)
