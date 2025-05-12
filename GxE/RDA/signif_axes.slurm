@@ -9,5 +9,5 @@ module purge
 module load anaconda/colsa
 conda activate r-4.2
 
-Rscript ~/repo/neonectria_SNP/GxE/RDA/RDA_no_NC.R $HOME/GxE_RDA/no_NC.RDA.rds
+Rscript ~/repo/neonectria_SNP/GxE/RDA/signif_axes.R $HOME/GxE_RDA/no_NC.RDA.rds
 
