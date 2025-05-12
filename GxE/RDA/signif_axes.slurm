@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --ntasks=1
 #SBATCH --job-name="anova.cca"
-#SBATCH --output=anova.cca.2.out
+#SBATCH --output=anova.cca.3.out
 #SBATCH --partition=shared
 #SBATCH --cpus-per-task=24
 
@@ -10,5 +10,5 @@ module load anaconda/colsa
 conda activate r-4.2
 
 # first arg is the input file and the second is the output file which will be written to the same dir
-Rscript ~/repo/neonectria_SNP/GxE/RDA/signif_axes.R $HOME/GxE_RDA/no_NC.RDA_env_full.rds signif_axis.env_full.rds
+Rscript ~/repo/neonectria_SNP/GxE/RDA/signif_axes.R $HOME/GxE_RDA/no_NC.RDA_env_selected.rds signif_axis.env_selected.rds
 

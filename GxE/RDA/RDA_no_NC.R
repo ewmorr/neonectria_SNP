@@ -123,14 +123,18 @@ names(varcors)
 
 X[,rownames(varcors)]
 
+# let's try using a pre-se;ected set (not based on cors)
+selected_env = c("bio2", "bio4", "bio5", "bio6", "bio8", "bio9", "bio13", "bio14", "bio18", "bio19")
+
 #https://popgen.nescent.org/2018-03-27_RDA_GEA.html
 #
 Y.rda <- rda(Y~ ., data=X[,rownames(varcors)], scale=T)
 Y.rda <- rda(Y~ ., data=X, scale=T)
 #Some constraints or conditions were aliased because they were redundant. This can happen if terms are linearly dependent (collinear): ‘bio7’
+Y.rda <- rda(Y~ ., data=X[,selected_env], scale=T)
 Y.rda
 
-saveRDS(Y.rda, "data/Nf/GxE/RDA/no_NC.RDA_env_full.rds")
+# saveRDS(Y.rda, "data/Nf/GxE/RDA/no_NC.RDA_env_selected.rds")
 
 RsquareAdj(Y.rda)
 
@@ -181,5 +185,28 @@ vif.cca(Y.rda)
           
 
 #All values are below 10, and most are below 5, which indicates that multicollinearity among these predictors shouldn’t be a problem for the model. We could remove one of the temperature variables (AMT or MDR) if we were concerned about these higher VIF values (Zuur et al., 2010).
+
+# 
+# 
+#              bio1               bio2               bio3               bio4               bio5               bio6               bio7               bio8               bio9 
+#      6.257379e+05       1.211844e+04       3.245226e+04       3.178912e+05       2.041892e+04       5.478910e+04                 NA       2.736696e+03       5.257181e+01 
+#             bio10              bio11              bio12              bio13              bio14              bio15              bio16              bio17              bio18 
+#      4.583412e+04       1.819367e+06       2.713571e+04       4.614652e+03       1.589045e+04       9.553935e+03       6.755058e+02       1.160403e+04       7.318879e+03 
+#             bio19 duration_infection 
+#      1.151517e+03       5.033007e+01 
+
+
+
+#######################
+#######################
+#plot
+# We’ll start with simple triplots from vegan. Here we’ll use scaling=3 (also known as “symmetrical scaling”) for the ordination plots. This scales the SNP and individual scores by the square root of the eigenvalues. See Borcard et al. (2011) or the vegan help for more information on scaling in RDA plots.
+
+plot(Y.rda, scaling=3)
+plot(Y.rda, choices = c(1, 3), scaling=3)
+plot(Y.rda, choices = c(1, 4), scaling=3)
+bioclim_var_names
+
+
 
 
