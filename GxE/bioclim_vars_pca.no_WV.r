@@ -458,6 +458,7 @@ fviz_contrib(climate.factoPCA, choice = "ind", axes = 2, top = 24)
 
 
 PC.df = data.frame(
+    state = site.bioclim$state,
     temp.PC1 = climate.factoPCA.temps$ind$coord[,1],
     #temp.PC2 = climate.factoPCA.temps$ind$coord[,2],
     precip.PC1 = climate.factoPCA.precip$ind$coord[,1],

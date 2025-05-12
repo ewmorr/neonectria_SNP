@@ -1,0 +1,159 @@
+library(vegan)
+library(dplyr)
+library(ggplot2)
+library(GGally)
+source("library/ggplot_theme.txt")
+
+
+Y = read.table("data/Nf/GxE/RDA/Y.noNC.filteredMAC.tsv", header = F, sep = "\t")
+SNP_pos = read.csv("data/Nf/GxE/RDA/SNP_pos.noNC.filteredMAC.csv")
+sample_ids = read.table("data/Nf/GxE/RDA/sample_ids.noNC", header = F)
+
+#read site metadata
+site.info = read.csv("data/sample_metadata/site_info.csv")
+site.bioclim = read.csv("data/sample_metadata/Nf.site_bioclim.csv")
+site.bioclim = site.bioclim %>% filter(state != "WV" & state != "NC")
+site.bioclim
+source("data/sample_metadata/world_clim/bioclim_names.txt")
+bioclim_var_names
+
+############################
+# setting up metadata
+site_metadata = left_join(
+    site.bioclim,
+    site.info %>% select(state, lat, lon, duration_infection),
+    by = c("state", "lat", "lon")
+) %>% unique() 
+
+#sample metadata. Needs to be sorted by sampleIDs 
+sample_metadata.Nf = read.csv("data/sample_metadata/Nf_filtered.lat_lon_dur_inf.csv")
+rownames(sample_metadata.Nf) = sample_metadata.Nf$Sequence_label
+
+sample_metadata.Nf.sorted = sample_metadata.Nf[sample_ids$V1,]
+nrow(sample_metadata.Nf.sorted)
+sample_metadata.site_info = left_join(sample_metadata.Nf.sorted, site_metadata)
+is.na(sample_metadata.site_info$bio1) %>% sum()
+
+row_ids = which(sample_ids$V1 %in% sample_metadata.site_info$Sequence_label)
+
+head(sample_metadata.site_info)
+
+X = sample_metadata.site_info %>%
+    select(starts_with("bio"), duration_infection)
+X
+
+###########################################
+# examining which vars need to be excluded
+# 
+#scale the vars
+X.uniq = X %>% unique()
+nrow(X.uniq)
+
+site_metadata.scaled = apply(
+    X.uniq, 
+    2, 
+    scale
+) %>% as.data.frame
+
+varcors = cor(site_metadata.scaled)
+sort(rowSums(abs(varcors) > 0.7))
+bioclim_var_names
+# we can start with removing bio1, bio11, bio12 first
+# we keep bio6 for now (min temp coldest month) bc it may be biologically important
+site_metadata.scaled.reduced = site_metadata.scaled %>%
+    select(-bio1, -bio11, -bio12)
+varcors = cor(site_metadata.scaled.reduced)
+sort(rowSums(abs(varcors) > 0.7))
+bioclim_var_names
+# lets remove the quarter estimates (wettest is one of the highest cors now)
+# these are repettive with the -est month measures
+# remove bio16, bio17, bio10
+site_metadata.scaled.reduced = site_metadata.scaled.reduced %>%
+    select(-bio16, -bio17, -bio10)
+varcors = cor(site_metadata.scaled.reduced)
+sort(rowSums(abs(varcors) > 0.7))
+bioclim_var_names[names(rowSums(varcors > 0.7))]
+# bio3 and 4 correlted with each other
+# lets go with isothermaility (bio3)
+# bio 5 with bio 6 only (0.7)
+# bio 7 with bio 3,4,6,9
+# let's go with -bio6
+site_metadata.scaled.reduced = site_metadata.scaled.reduced %>%
+    select(-bio6) 
+varcors = cor(site_metadata.scaled.reduced)
+sort(rowSums(abs(varcors) > 0.7))
+
+site_metadata.scaled.reduced = site_metadata.scaled.reduced %>%
+    select(-bio4, -bio7) 
+varcors = cor(site_metadata.scaled.reduced)
+sort(rowSums(abs(varcors) > 0.7))
+
+site_metadata.scaled.reduced = site_metadata.scaled.reduced %>%
+    select(-bio19) 
+varcors = cor(site_metadata.scaled.reduced)
+sort(rowSums(abs(varcors) > 0.7))
+
+# last to deal with is precip seasonality versus precip direst month
+# we also have precip wettest month included and these are easier to interpret 
+# than how precip is distrbuted throughout the year
+# we exclude bio 15
+site_metadata.scaled.reduced = site_metadata.scaled.reduced %>%
+    select(-bio15) 
+varcors = cor(site_metadata.scaled.reduced)
+sort(rowSums(abs(varcors) > 0.7))
+
+
+p1 = ggpairs(
+    site_metadata.scaled.reduced, 
+    columns = 1:ncol(site_metadata.scaled.reduced)
+) +
+    my_gg_theme.def_size +
+    theme(
+        axis.text.x = element_text(angle = 55, hjust = 1)
+    )
+
+bioclim_var_names[names(rowSums(varcors > 0.7))]
+
+
+pdf("figures/GxE/RDA/env_vars/pairs_cor.no_NC.pdf", width = 16, height = 16)
+p1
+dev.off()
+
+names(varcors)
+
+X[,rownames(varcors)]
+
+#https://popgen.nescent.org/2018-03-27_RDA_GEA.html
+#
+Y.rda <- rda(Y~ ., data=X[,rownames(varcors)], scale=T)
+Y.rda
+
+saveRDS(Y.rda, "data/Nf/GxE/RDA/no_NC.RDA.rds")
+
+RsquareAdj(Y.rda)
+
+#The eigenvalues for the constrained axes reflect the variance explained by each canonical axis:
+summary(eigenvals(Y.rda, model = "constrained"))
+# We can visualize this information using a screeplot of the canonical eigenvalues by calling screeplot:
+screeplot(Y.rda)
+
+#Now let’s check our RDA model for significance using formal tests. We can assess both the full model and each constrained axis using F-statistics (Legendre et al, 2010). 
+signif.full <- anova.cca(Y.rda, parallel=getOption("mc.cores")) # default is permutation=999
+signif.full
+
+#########################
+# The full model is significant, but that doesn’t tell us much. We can check each constrained axis for significance using the code below. For this test, each constrained axis is tested using all previous constrained axes as conditions. See ?anova.cca and Legendre et al. (2010) for details. The purpose here is to determine which constrained axes we should investigate for candidate loci.
+
+# This analysis is time intensive (taking up to a few hours for the full wolf data set), so we will not run the code here. If we did run it, we would find that the first three constrained axes are significant (p = 0.001); constrained axis 4 has a p-value of 0.080, while axes 5-8 have p-values > 0.850. This corresponds with our evaluation of the screeplot, above.
+
+start.time <- Sys.time()
+signif.axis <- anova.cca(Y.rda, by="axis", parallel=getOption("mc.cores"))
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+signif.axis
+
+# vegan has a simple function for checking Variance Inflation Factors for the predictor variables used in the model:
+vif.cca(Y.rda)
+
+

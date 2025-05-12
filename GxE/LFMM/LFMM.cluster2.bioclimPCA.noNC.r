@@ -7,8 +7,8 @@ source("library/ggplot_theme.txt")
 #read site metadata
 site.info = read.csv("data/sample_metadata/site_info.csv")
 site.bioclim = read.csv("data/sample_metadata/Nf.site_bioclim.csv")
-site.bioclim = site.bioclim %>% filter(state != "WV")
-site.bioclim.PC = read.csv("data/sample_metadata/Nf.sites_bioclim_PC.no_WV.csv", header = T)
+site.bioclim = site.bioclim %>% filter(state != "WV" & state != "NC")
+site.bioclim.PC = read.csv("data/sample_metadata/Nf.sites_bioclim_PC.no_WV_no_NC.csv", header = T)
 site.bioclim
 site.bioclim.PC
 
@@ -27,7 +27,7 @@ site_metadata = left_join(
 sample_metadata.Nf = read.csv("data/sample_metadata/Nf_filtered.lat_lon_dur_inf.csv")
 rownames(sample_metadata.Nf) = sample_metadata.Nf$Sequence_label
 #PED sample IDs
-sample_ids = read.table("data/Nf/final_tables/rm_dups/FINAL_snp.gwas_analyses.cluster2.sampleIDs", header = F)
+sample_ids = read.table("data/Nf/final_tables/rm_dups/FINAL_snp.gwas_analyses.cluster2_no_NC.sampleIDs", header = F)
 sample_metadata.Nf.sorted = sample_metadata.Nf[sample_ids$V1,]
 nrow(sample_metadata.Nf.sorted)
 sample_metadata.site_info = left_join(sample_metadata.Nf.sorted, site_metadata)
@@ -37,12 +37,12 @@ row_ids = which(sample_ids$V1 %in% sample_metadata.site_info$Sequence_label)
 
 #The genotype data can simply be read in as a matrix (according the docs)
 #OR can try loading LEA and using readLfmm()
-Y = as.matrix(read.table("data/Nf/final_tables/rm_dups/FINAL_snp.gwas_analyses.cluster2.lfmm", header = F))
+Y = as.matrix(read.table("data/Nf/final_tables/rm_dups/FINAL_snp.gwas_analyses.cluster2_no_NC.lfmm", header = F))
 Y.filtered = Y[row_ids,]
 nrow(Y.filtered)
 ncol(Y.filtered)
 
-SNP_pos = read.table("data/Nf/final_tables/rm_dups/FINAL_snp.gwas_analyses.cluster2.recode.map")
+SNP_pos = read.table("data/Nf/final_tables/rm_dups/FINAL_snp.gwas_analyses.cluster2_no_NC.recode.map")
 nrow(SNP_pos)
 SNP_pos = SNP_pos[c(1,4)]
 colnames(SNP_pos) = c("scaffold", "position")
@@ -60,23 +60,24 @@ nrow(Y.filtered)
 minMAC = 3
 
 sum(ref_sum < minMAC)
-# 101504
+# 112892
 sum(alt_sum < minMAC)
 ncol(Y.filtered)
 # 424811
 ncol(Y.filtered) - sum(ref_sum < minMAC)
-# 323307
+# 311919
 
 which(ref_sum < minMAC) 
 which(alt_sum < minMAC)# there are none
 rm_cols = which(ref_sum < minMAC)
 
-length(rm_cols)\#101504
+length(rm_cols)
+#112892
 ncol(Y.filtered)
 length(rm_cols)/ncol(Y.filtered)
-# 0.2389392
+# 0.2657464
 ncol(Y.filtered)-length(rm_cols)
-# 323307
+# 311919
 Y.filteredMAC = Y.filtered[,-rm_cols]
 SNP_pos.filteredMAC = SNP_pos[-rm_cols,]
 ncol(Y.filteredMAC)
@@ -115,6 +116,7 @@ plot(pc$x[,4] ~ pc$x[,1])
 #######################
 #PC1
 
+nrow(sample_metadata.site_info)
 #variable for test
 X = (sample_metadata.site_info$temp.PC1)
 #X = (sample_metadata.site_info[,39:43])
@@ -150,22 +152,22 @@ col = "grey")
 
 #Computing genomic inflation factor (GIF) based on calibrated z-scores (http://membres-timc.imag.fr/Olivier.Francois/lfmm/files/LEA_1.html) and Francois et al. 2016
 lambda = median(pv$score^2, na.rm = T)/0.456
-lambda #1.180159
+lambda #1.077236
 adj.p.values = pchisq(pv$score^2/lambda, df = 1, lower = FALSE)
 hist(adj.p.values)
 #Note that these calibrated scores are similar as pv$calibrated.pvalue
 hist(pv$calibrated.pvalue) #this looks basically perfect
 hist(pv$pvalue)
 #Try higher value of GIF -- looking for flat distribution with peak near zero
-adj.p.values = pchisq(pv$score^2/1.25, df = 1, lower = FALSE)
+adj.p.values = pchisq(pv$score^2/1.15, df = 1, lower = FALSE)
 hist(adj.p.values)
 
 #Try lower value of GIF -- looking for flat distribution with peak near zero
-adj.p.values = pchisq(pv$score^2/1.05, df = 1, lower = FALSE)
+adj.p.values = pchisq(pv$score^2/0.95, df = 1, lower = FALSE)
 hist(adj.p.values)
 
 #Try lower value of GIF -- looking for flat distribution with peak near zero
-adj.p.values = pchisq(pv$score^2/1.05, df = 1, lower = FALSE)
+adj.p.values = pchisq(pv$score^2/1.0, df = 1, lower = FALSE)
 hist(adj.p.values)
 
 #THIS IS SHOWING THAT THE GIF CALIBRATION IN THE ALGORITHM IS MORE CONSERVATIVE THAN LOWER VALUES OF LAMBDA
@@ -194,14 +196,14 @@ pv.with_pos <- pv.with_pos %>% mutate(outlier = ifelse(calibrated.p < my_thresho
 #note that once we filtered for MAC we have no more NA p values
 pv.with_pos %>% group_by(outlier) %>% tally()
 pv.with_pos %>% filter(is.na(outlier)) %>% head
-#8083
+#7798
 #FDR correction
 #This is based on the auto calibartion
 pv.with_pos$FDR.p = p.adjust(pv.with_pos$calibrated.p, method = "fdr", n = length(pv.with_pos$calibrated.p))
 pv.with_pos <- pv.with_pos %>% mutate(FDR.sig = ifelse(FDR.p < 0.05, "sig", "background"))
 pv.with_pos %>% group_by(FDR.sig) %>% tally()
 
-#1092  SNPs identified as significant after FDR correction
+#0  SNPs identified as significant after FDR correction
 
 
 #FDR correction
@@ -212,12 +214,12 @@ pv.with_pos %>% group_by(FDR.sig.man) %>% tally()
 
 
 pv.PC1.with_pos = pv.with_pos
-#1094 SNPs identified as significant after FDR correction
+#0 SNPs identified as significant after FDR correction
 
 
 pv.PC1.with_pos %>% head()
 pv.PC1.with_pos %>% filter(outlier == "outlier") %>% nrow()
-#8083 
+#7798 
 # but this is not the same thing as sig these are 2.5% outliers
 
 ####################
@@ -316,7 +318,7 @@ theme(
 )
 p2
 
-png("figures/GxE/LFMM/bioclim.temp.PC1.png", width = 1080, height = 240)
+png("figures/GxE/LFMM/no_NC.bioclim.temp.PC1.png", width = 1080, height = 240)
 p1
 dev.off()
 
@@ -352,7 +354,7 @@ col = "grey")
 
 #Computing genomic inflation factor (GIF) based on calibrated z-scores (http://membres-timc.imag.fr/Olivier.Francois/lfmm/files/LEA_1.html) and Francois et al. 2016
 lambda = median(pv.pc2$score^2, na.rm = T)/0.456
-lambda #1.294011
+lambda #1.195644
 adj.p.values = pchisq(pv.pc2$score^2/lambda, df = 1, lower = FALSE)
 hist(adj.p.values)
 #Note that these calibrated scores are similar as pv$calibrated.pvalue
@@ -371,7 +373,7 @@ hist(adj.p.values)
 #THIS IS SHOWING THAT THE GIF CALIBRATION IN THE ALGORITHM IS Good
 #However, the lower values have a correct distribution under null model
 #Try at GIF = lambda
-adj.p.values = pchisq(pv.pc2$score^2/lambda, df = 1, lower = FALSE)
+adj.p.values = pchisq(pv.pc2$score^2/1.05, df = 1, lower = FALSE)
 hist(adj.p.values)
 
 nrow(SNP_pos)
@@ -398,7 +400,7 @@ range(pv.pc2.with_pos$FDR.p, na.rm = T)
 pv.pc2.with_pos <- pv.pc2.with_pos %>% mutate(FDR.sig = ifelse(FDR.p < 0.05, "sig", "background"))
 pv.pc2.with_pos %>% group_by(FDR.sig) %>% tally()
 
-#3800 at 0.05
+#8 at 0.05
 
 ####################
 #ggplots
@@ -426,7 +428,7 @@ p1
 
 
 
-png("figures/GxE/LFMM/bioclim.precip.PC1.png", width = 1080, height = 240)
+png("figures/GxE/LFMM/no_NC.bioclim.precip.PC1.png", width = 1080, height = 240)
 p1
 dev.off()
 
@@ -448,30 +450,30 @@ calibrate = "gif")
 
 #Computing genomic inflation factor (GIF) based on calibrated z-scores (http://membres-timc.imag.fr/Olivier.Francois/lfmm/files/LEA_1.html) and Francois et al. 2016
 lambda = median(pv.precip.PC2$score^2, na.rm = T)/0.456
-lambda #1.100117
+lambda #0.9586345
 adj.p.values = pchisq(pv.precip.PC2$score^2/lambda, df = 1, lower = FALSE)
 hist(adj.p.values)
 #Note that these calibrated scores are similar as pv$calibrated.pvalue
 hist(pv.precip.PC2$calibrated.pvalue)
 hist(pv.precip.PC2$pvalue)
-#IN THIS CASE THE CALCULATED VALUES looks terrible and very conservative
+#IN THIS CASE THE CALCULATED VALUES looks ok
 
 #Try higher value of GIF -- looking for flat distribution with peak near zero
-adj.p.values = pchisq(pv.precip.PC2$score^2/1.25, df = 1, lower = FALSE)
+adj.p.values = pchisq(pv.precip.PC2$score^2/1.15, df = 1, lower = FALSE)
 hist(adj.p.values) #very conservative
 
 #Try lower value of GIF -- looking for flat distribution with peak near zero
 adj.p.values = pchisq(pv.precip.PC2$score^2/1.05, df = 1, lower = FALSE)
-hist(adj.p.values) #This looks good
+hist(adj.p.values) #This looks conservative
 
 #Try lower value of GIF -- looking for flat distribution with peak near zero
-adj.p.values = pchisq(pv.precip.PC2$score^2/0.95, df = 1, lower = FALSE)
+adj.p.values = pchisq(pv.precip.PC2$score^2/0.85, df = 1, lower = FALSE)
 hist(adj.p.values) #This looks good, but less conservative
 
 #THIS IS SHOWING THAT THE GIF CALIBRATION IN THE ALGORITHM IS MORE CONSERVATIVE THAN LOWER VALUES OF LAMBDA
 #However, the lower values have a correct distribution under null model
 #Try at GIF = 1.0
-adj.p.values = pchisq(pv.precip.PC2$score^2/1.0, df = 1, lower = FALSE)
+adj.p.values = pchisq(pv.precip.PC2$score^2/0.90, df = 1, lower = FALSE)
 hist(adj.p.values)
 
 
@@ -502,7 +504,7 @@ pv.precip.PC2.with_pos$FDR.p.man = p.adjust(pv.precip.PC2.with_pos$man.adj.p, me
 pv.precip.PC2.with_pos <- pv.precip.PC2.with_pos %>% mutate(FDR.sig.man = ifelse(FDR.p.man < 0.05, "sig", "background"))
 pv.precip.PC2.with_pos %>% group_by(FDR.sig.man) %>% tally()
 
-#3
+#1
 
 ####################
 #ggplots
@@ -551,7 +553,7 @@ theme(
 )
 p2
 
-png("figures/GxE/LFMM/bioclim.precip.PC2.png", width = 1080, height = 240)
+png("figures/GxE/LFMM/no_NC.bioclim.precip.PC2.png", width = 1080, height = 240)
 p1
 dev.off()
 
@@ -573,7 +575,7 @@ calibrate = "gif")
 
 #Computing genomic inflation factor (GIF) based on calibrated z-scores (http://membres-timc.imag.fr/Olivier.Francois/lfmm/files/LEA_1.html) and Francois et al. 2016
 lambda = median(pv.bio2$score^2, na.rm = T)/0.456
-lambda #1.230568
+lambda #1.043716
 adj.p.values = pchisq(pv.bio2$score^2/lambda, df = 1, lower = FALSE)
 hist(adj.p.values)
 #Note that these calibrated scores are similar as pv$calibrated.pvalue
@@ -582,18 +584,18 @@ hist(pv.bio2$calibrated.pvalue)
 #IN THIS CASE THE CALCULATED VALUES looks conservative
 
 #Try higher value of GIF -- looking for flat distribution with peak near zero
-adj.p.values = pchisq(pv.bio2$score^2/1.35, df = 1, lower = FALSE)
+adj.p.values = pchisq(pv.bio2$score^2/1.25, df = 1, lower = FALSE)
 hist(adj.p.values) #very conservative
 
 #Try lower value of GIF -- looking for flat distribution with peak near zero
 adj.p.values = pchisq(pv.bio2$score^2/1.15, df = 1, lower = FALSE)
-hist(adj.p.values) #This looks very relaxed
+hist(adj.p.values) #This looks very conservative
 
 
 #THIS IS SHOWING THAT THE GIF CALIBRATION IN THE ALGORITHM IS MORE CONSERVATIVE THAN LOWER VALUES OF LAMBDA
 #However, the lower values have a correct distribution under null model
 #Try at GIF = 1.25
-adj.p.values = pchisq(pv.bio2$score^2/1.25, df = 1, lower = FALSE)
+adj.p.values = pchisq(pv.bio2$score^2/0.95, df = 1, lower = FALSE)
 hist(adj.p.values)
 
 #Join with actual positiion and chromosome
@@ -614,14 +616,14 @@ pv.bio2.with_pos$FDR.p = p.adjust(pv.bio2.with_pos$calibrated.p, method = "fdr",
 pv.bio2.with_pos <- pv.bio2.with_pos %>% mutate(FDR.sig = ifelse(FDR.p < 0.05, "sig", "background"))
 pv.bio2.with_pos %>% group_by(FDR.sig) %>% tally()
 
-#744
+#none
 
 #FDR correction manual adjustment (lambda = 1)
 pv.bio2.with_pos$FDR.p.man = p.adjust(pv.bio2.with_pos$man.adj.p, method = "fdr", n = length(pv.bio2.with_pos$man.adj.p))
 pv.bio2.with_pos <- pv.bio2.with_pos %>% mutate(FDR.sig.man = ifelse(FDR.p.man < 0.05, "sig", "background"))
 pv.bio2.with_pos %>% group_by(FDR.sig.man) %>% tally()
 
-#680
+#0
 
 ####################
 #ggplots
@@ -667,7 +669,7 @@ theme(
     axis.title.x = element_blank()
 )
 
-png("figures/GxE/LFMM/bioclim.bio2.png", width = 1080, height = 240)
+png("figures/GxE/LFMM/no_NCbioclim.bio2.png", width = 1080, height = 240)
 p1
 dev.off()
 
@@ -689,7 +691,7 @@ calibrate = "gif")
 
 #Computing genomic inflation factor (GIF) based on calibrated z-scores (http://membres-timc.imag.fr/Olivier.Francois/lfmm/files/LEA_1.html) and Francois et al. 2016
 lambda = median(pv.duration_infection$score^2, na.rm = T)/0.456
-lambda #1.123389
+lambda #0.990194
 adj.p.values = pchisq(pv.duration_infection$score^2/lambda, df = 1, lower = FALSE)
 hist(adj.p.values)
 #Note that these calibrated scores are similar as pv$calibrated.pvalue
@@ -698,12 +700,12 @@ hist(pv.duration_infection$calibrated.pvalue)
 #IN THIS CASE THE CALCULATED VALUES looks conservative
 
 #Try higher value of GIF -- looking for flat distribution with peak near zero
-adj.p.values = pchisq(pv.duration_infection$score^2/1.35, df = 1, lower = FALSE)
+adj.p.values = pchisq(pv.duration_infection$score^2/1.05, df = 1, lower = FALSE)
 hist(adj.p.values) #very conservative
 
 #Try lower value of GIF -- looking for flat distribution with peak near zero
-adj.p.values = pchisq(pv.duration_infection$score^2/1.15, df = 1, lower = FALSE)
-hist(adj.p.values) #This looks very relaxed
+adj.p.values = pchisq(pv.duration_infection$score^2/0.85, df = 1, lower = FALSE)
+hist(adj.p.values) #This looks good
 
 
 #THIS IS SHOWING THAT THE GIF CALIBRATION IN THE ALGORITHM IS MORE CONSERVATIVE THAN LOWER VALUES OF LAMBDA
@@ -730,7 +732,7 @@ pv.duration_infection.with_pos$FDR.p = p.adjust(pv.duration_infection.with_pos$c
 pv.duration_infection.with_pos <- pv.duration_infection.with_pos %>% mutate(FDR.sig = ifelse(FDR.p < 0.05, "sig", "background"))
 pv.duration_infection.with_pos %>% group_by(FDR.sig) %>% tally()
 
-#none
+#1
 
 #FDR correction manual adjustment (lambda = 1)
 pv.duration_infection.with_pos$FDR.p.man = p.adjust(pv.duration_infection.with_pos$man.adj.p, method = "fdr", n = length(pv.duration_infection.with_pos$man.adj.p))
@@ -782,7 +784,7 @@ theme(
 )
 p2
 
-png("figures/GxE/LFMM/duration_infection.png", width = 1080, height = 240)
+png("figures/GxE/LFMM/no_NC.duration_infection.png", width = 1080, height = 240)
 p1
 dev.off()
 
@@ -791,11 +793,11 @@ dev.off()
 #######################
 #write tables
 
-write.table(pv.PC1.with_pos, "data/Nf/GxE/LFMM/temp.pc1.lfmm.txt", quote = F, row.names = F, sep = "\t")
-write.table(pv.pc2.with_pos, "data/Nf/GxE/LFMM/precip.pc1.lfmm.txt", quote = F, row.names = F, sep = "\t")
-write.table(pv.precip.PC2.with_pos, "data/Nf/GxE/LFMM/precip.pc2.lfmm.txt", quote = F, row.names = F, sep = "\t")
-write.table(pv.bio2.with_pos, "data/Nf/GxE/LFMM/bio2.lfmm.txt", quote = F, row.names = F, sep = "\t")
-write.table(pv.duration_infection.with_pos, "data/Nf/GxE/LFMM/dur_inf.lfmm.txt", quote = F, row.names = F, sep = "\t")
+write.table(pv.PC1.with_pos, "data/Nf/GxE/LFMM/no_NC.temp.pc1.lfmm.txt", quote = F, row.names = F, sep = "\t")
+write.table(pv.pc2.with_pos, "data/Nf/GxE/LFMM/no_NC.precip.pc1.lfmm.txt", quote = F, row.names = F, sep = "\t")
+write.table(pv.precip.PC2.with_pos, "data/Nf/GxE/LFMM/no_NC.precip.pc2.lfmm.txt", quote = F, row.names = F, sep = "\t")
+write.table(pv.bio2.with_pos, "data/Nf/GxE/LFMM/no_NC.bio2.lfmm.txt", quote = F, row.names = F, sep = "\t")
+write.table(pv.duration_infection.with_pos, "data/Nf/GxE/LFMM/no_NC.dur_inf.lfmm.txt", quote = F, row.names = F, sep = "\t")
 
 
 
@@ -918,7 +920,7 @@ grid.newpage()
 grid.draw(g)
 
 
-png("figures/GxE/LFMM/cluster2.tempPC1-precipPC1-precipPC2-bio2-durInf.AUTO_GIF.png", width = 1080, height = 640)
+png("figures/GxE/LFMM/no_NC.cluster2.tempPC1-precipPC1-precipPC2-bio2-durInf.AUTO_GIF.png", width = 1080, height = 640)
 grid.newpage()
 grid.draw(g)
 dev.off()
