@@ -126,9 +126,11 @@ X[,rownames(varcors)]
 #https://popgen.nescent.org/2018-03-27_RDA_GEA.html
 #
 Y.rda <- rda(Y~ ., data=X[,rownames(varcors)], scale=T)
+Y.rda <- rda(Y~ ., data=X, scale=T)
+#Some constraints or conditions were aliased because they were redundant. This can happen if terms are linearly dependent (collinear): ‘bio7’
 Y.rda
 
-saveRDS(Y.rda, "data/Nf/GxE/RDA/no_NC.RDA.rds")
+saveRDS(Y.rda, "data/Nf/GxE/RDA/no_NC.RDA_env_full.rds")
 
 RsquareAdj(Y.rda)
 
@@ -141,19 +143,43 @@ screeplot(Y.rda)
 signif.full <- anova.cca(Y.rda, parallel=getOption("mc.cores")) # default is permutation=999
 signif.full
 
+#Permutation test for rda under reduced model
+#Permutation: free
+#Number of permutations: 999
+#
+#Model: rda(formula = Y ~ bio2 + bio3 + bio5 + bio8 + bio9 + bio13 + bio14 + bio18 + duration_infection, data = X[, rownames(varcors)], scale = T)
+#         Df Variance     F Pr(>F)    
+#Model     9    13959 1.215  0.001 ***
+#Residual 82   104678                 
+#---
+#Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
 #########################
 # The full model is significant, but that doesn’t tell us much. We can check each constrained axis for significance using the code below. For this test, each constrained axis is tested using all previous constrained axes as conditions. See ?anova.cca and Legendre et al. (2010) for details. The purpose here is to determine which constrained axes we should investigate for candidate loci.
 
 # This analysis is time intensive (taking up to a few hours for the full wolf data set), so we will not run the code here. If we did run it, we would find that the first three constrained axes are significant (p = 0.001); constrained axis 4 has a p-value of 0.080, while axes 5-8 have p-values > 0.850. This corresponds with our evaluation of the screeplot, above.
 
-start.time <- Sys.time()
-signif.axis <- anova.cca(Y.rda, by="axis", parallel=getOption("mc.cores"))
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
+###
+### This analysis is also mem intensive. Pulls in about 31 G on the server
+
+#start.time <- Sys.time()
+#signif.axis <- anova.cca(Y.rda, by="axis", parallel=getOption("mc.cores"))
+#end.time <- Sys.time()
+#time.taken <- end.time - start.time
+#time.taken
+
+signif.axis = readRDS("data/Nf/GxE/RDA/no_NC.RDA.signif_axes.rds")
 signif.axis
+
+#########################
+
 
 # vegan has a simple function for checking Variance Inflation Factors for the predictor variables used in the model:
 vif.cca(Y.rda)
+#              bio2               bio3               bio5               bio8               bio9              bio13              bio14              bio18    duration_infection
+#          9.699805          16.352897           7.642433           8.283968          11.560292          11.859774           5.657037          10.049121    3.366768   
+          
+
+#All values are below 10, and most are below 5, which indicates that multicollinearity among these predictors shouldn’t be a problem for the model. We could remove one of the temperature variables (AMT or MDR) if we were concerned about these higher VIF values (Zuur et al., 2010).
 
 
