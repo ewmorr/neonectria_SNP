@@ -143,6 +143,16 @@ summary(eigenvals(Y.rda, model = "constrained"))
 # We can visualize this information using a screeplot of the canonical eigenvalues by calling screeplot:
 screeplot(Y.rda)
 
+ggplot() +
+geom_line(aes(x=c(1:length(Y.rda$CCA$eig)), y=as.vector(Y.rda$CCA$eig)), linetype="dotted",
+size = 1.5, color="darkgrey") +
+geom_point(aes(x=c(1:length(Y.rda$CCA$eig)), y=as.vector(Y.rda$CCA$eig)), size = 3,
+color="darkgrey") +
+scale_x_continuous(name = "Ordination axes", breaks=c(1:10)) +
+ylab("Inertia") +
+#xlab("Axis") +
+theme_bw()
+
 #Now let’s check our RDA model for significance using formal tests. We can assess both the full model and each constrained axis using F-statistics (Legendre et al, 2010). 
 signif.full <- anova.cca(Y.rda, parallel=getOption("mc.cores")) # default is permutation=999
 signif.full
@@ -195,17 +205,194 @@ vif.cca(Y.rda)
 #             bio19 duration_infection 
 #      1.151517e+03       5.033007e+01 
 
-
+#selected vars
+#      bio2       bio4       bio5       bio6       bio8       bio9      bio13      bio14      bio18      bio19 
+# 21.194469 156.824176  59.167557 320.658452   9.044443  13.622518   9.102534  24.790246  10.329052  26.959872 
 
 #######################
 #######################
-#plot
+#
 # We’ll start with simple triplots from vegan. Here we’ll use scaling=3 (also known as “symmetrical scaling”) for the ordination plots. This scales the SNP and individual scores by the square root of the eigenvalues. See Borcard et al. (2011) or the vegan help for more information on scaling in RDA plots.
 
 plot(Y.rda, scaling=3)
 plot(Y.rda, choices = c(1, 3), scaling=3)
 plot(Y.rda, choices = c(1, 4), scaling=3)
 bioclim_var_names
+
+#We’ll use the loadings of the SNPs in the ordination space to determine which SNPs are candidates for local adaptation. The SNP loadings are stored as species in the RDA object. We’ll extract the SNP loadings from the three significant constrained axes:
+load.rda <- scores(Y.rda, choices=c(1:4), display="species")  # Species scores for the first three constrained axes
+hist(load.rda[,1], main="Loadings on RDA1")
+hist(load.rda[,2], main="Loadings on RDA2")
+hist(load.rda[,3], main="Loadings on RDA1")
+hist(load.rda[,4], main="Loadings on RDA2")
+
+# get outliers based on two-tailed z score
+# from Forester
+outliers <- function(x,z){
+  lims <- mean(x) + c(-1, 1) * z * sd(x)     # find loadings +/-z sd from mean loading     
+  x[x < lims[1] | x > lims[2]]               # locus names in these tails
+}
+
+
+nrow(load.rda)
+
+#selected env
+cand1 <- outliers(load.rda[,1],3) # 787
+cand2 <- outliers(load.rda[,2],3) # 287
+cand3 <- outliers(load.rda[,3],3) # 746
+cand4 <- outliers(load.rda[,4],3) # 387
+length(cand1)
+length(cand2)
+length(cand3)
+length(cand4)
+
+
+(length(cand1) + length(cand2)) - length( intersect(names(cand1), names(cand2)) ) #can not use setdiff bc it only returns first vec
+length( intersect(names(cand1), names(cand2)) )
+#0 are shared
+length( intersect(names(cand1), names(cand3)) )
+# 1
+length( intersect(names(cand1), names(cand4)) )
+# 1
+length( intersect(names(cand2), names(cand3)) )
+# 0
+length( intersect(names(cand2), names(cand4)) )
+# 0
+length( intersect(names(cand3), names(cand4)) )
+# 5
+
+cand1.df = data.frame(
+    SNP_pos[sub("V", "", names(cand1)), ], #index the 
+
+cand1.df <- cbind.data.frame(axis = rep(1,times=length(cand1)), names(cand1), unname(cand1))
+cand2.df <- cbind.data.frame(rep(2,times=length(cand2)), names(cand2), unname(cand2))
+
+
+
+
+
+
+#from Capblanq, following pcadapt strategy
+rdadapt<-function(rda,K)
+{
+    zscores<-Y.rda$CCA$v[,1:as.numeric(K)]
+    resscale <- apply(zscores, 2, scale)
+    resmaha <- robust::covRob(resscale, distance = TRUE, na.action= na.omit, estim="pairwiseGK")$dist
+    lambda <- median(resmaha)/qchisq(0.5,df=K)
+    reschi2test <- pchisq(resmaha/lambda,K,lower.tail=FALSE)
+    qval <- qvalue::qvalue(reschi2test)
+    q.values_rdadapt<-qval$qvalues
+    return(data.frame(p.values=reschi2test, q.values=q.values_rdadapt))
+}
+# env selected
+res_rdadapt<-rdadapt(Y.rda, 5)
+
+#note that capblanq also uses q < 0.1
+which(res_rdadapt$q.values < 0.05) %>% length
+# full data set had 5560 at 0.05
+# selected vars has 2 at 0.05
+# non-correalted vars 5 axes has 3
+which(res_rdadapt$q.values < 0.1) %>% length
+# 36 at 0.1 with 4 axes
+# 441 with 2 axes (these axes explain the most var)
+# signif axes still running
+# non-correalted vars 5 axes has 66
+ 
+# manhattan plot outliers
+ggplot() +
+geom_point(
+    aes(
+        x=c(1:length(res_rdadapt[,1])), 
+        y=-log10(res_rdadapt[,1])
+    ),
+    col = "gray83"
+) +
+geom_point(
+    aes(
+        x=c(1:length(res_rdadapt[,1]))[which(res_rdadapt[,2] < 0.1)],
+        y = -log10(res_rdadapt[which(res_rdadapt[,2] < 0.1),1])
+    ),
+    col = "orange"
+) +
+xlab("SNPs") + ylab("-log10(p.values)") +
+theme_bw()
+
+# projection of outliers in rda space
+ggplot() +
+    geom_point(
+        aes(
+            x=Y.rda$CCA$v[,1], 
+            y=Y.rda$CCA$v[,2]
+        ), 
+        col = "gray86"
+    ) +
+    geom_point(
+        aes(
+            x=Y.rda$CCA$v[which(res_rdadapt[,2] < 0.1),1],
+            y=Y.rda$CCA$v[which(res_rdadapt[,2] < 0.1),2]
+        ), 
+        col = "orange"
+    ) +
+    geom_segment(
+        aes(
+            xend=Y.rda$CCA$biplot[,1]/20, 
+            yend=Y.rda$CCA$biplot[,2]/20, 
+            x=0, 
+            y=0
+        ),
+        colour="black", size=0.5, linetype=1,
+        arrow=arrow(length = unit(0.02, "npc"))
+    ) +
+    geom_text(
+        aes(
+            x=1.2*Y.rda$CCA$biplot[,1]/20, 
+            y=1.2*Y.rda$CCA$biplot[,3]/20, 
+            label = rownames(Y.rda$CCA$biplot)
+        )
+    ) +
+xlab("RDA 1") + ylab("RDA 2") +
+theme_bw() +
+theme(legend.position="none")
+
+
+axis_choice_1=1
+axis_choice_2=2
+
+ggplot() +
+    geom_point(
+        aes(
+            x=Y.rda$CCA$v[,1], 
+            y=Y.rda$CCA$v[,3]
+        ), 
+        col = "gray86"
+    ) +
+    geom_point(
+        aes(
+            x=Y.rda$CCA$v[which(res_rdadapt[,2] < 0.1),1],
+            y=Y.rda$CCA$v[which(res_rdadapt[,2] < 0.1),3]
+        ), 
+        col = "orange"
+    ) +
+    geom_segment(
+        aes(
+            xend=Y.rda$CCA$biplot[,1]/20, 
+            yend=Y.rda$CCA$biplot[,3]/20, 
+            x=0, 
+            y=0
+        ),
+        colour="black", size=0.5, linetype=1,
+        arrow=arrow(length = unit(0.02, "npc"))
+    ) +
+    geom_text(
+        aes(
+            x=1.2*Y.rda$CCA$biplot[,1]/20, 
+            y=1.2*Y.rda$CCA$biplot[,3]/20, 
+            label = rownames(Y.rda$CCA$biplot)
+        )
+    ) +
+xlab("RDA 1") + ylab("RDA 2") +
+theme_bw() +
+theme(legend.position="none")
 
 
 
