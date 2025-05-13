@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --ntasks=1
 #SBATCH --job-name="anova.cca"
-#SBATCH --output=anova.cca.2.out
+#SBATCH --output=anova.cca.1.out
 #SBATCH --partition=shared
 #SBATCH --cpus-per-task=24
 
