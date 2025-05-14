@@ -124,14 +124,25 @@ names(varcors)
 X[,rownames(varcors)]
 
 # let's try using a pre-se;ected set (not based on cors)
-selected_env = c("bio2", "bio4", "bio5", "bio6", "bio8", "bio9", "bio13", "bio14", "bio18", "bio19")
+selected_env = c("bio2", "bio4", "bio5", "bio6", "bio8", "bio9", "bio13", "bio14", "bio18", "bio19", "duration_infection")
 
 #https://popgen.nescent.org/2018-03-27_RDA_GEA.html
 #
-Y.rda <- rda(Y~ ., data=X[,rownames(varcors)], scale=T)
-Y.rda <- rda(Y~ ., data=X, scale=T)
+###################
+# there is something of an art to picking the X matrix still
+# 
+# reduced vars
+env_mat = X[,rownames(varcors)]
+# full vars
+env_mat = X
 #Some constraints or conditions were aliased because they were redundant. This can happen if terms are linearly dependent (collinear): ‘bio7’
-Y.rda <- rda(Y~ ., data=X[,selected_env], scale=T)
+
+# selected vars
+env_mat = X[,selected_env]
+
+############
+# run the RDA
+Y.rda <- rda(Y~ ., data=env_mat, scale=T)
 Y.rda
 
 # saveRDS(Y.rda, "data/Nf/GxE/RDA/no_NC.RDA_env_selected.rds")
@@ -143,6 +154,7 @@ summary(eigenvals(Y.rda, model = "constrained"))
 # We can visualize this information using a screeplot of the canonical eigenvalues by calling screeplot:
 screeplot(Y.rda)
 
+# scree
 ggplot() +
 geom_line(aes(x=c(1:length(Y.rda$CCA$eig)), y=as.vector(Y.rda$CCA$eig)), linetype="dotted",
 size = 1.5, color="darkgrey") +
@@ -150,7 +162,6 @@ geom_point(aes(x=c(1:length(Y.rda$CCA$eig)), y=as.vector(Y.rda$CCA$eig)), size =
 color="darkgrey") +
 scale_x_continuous(name = "Ordination axes", breaks=c(1:10)) +
 ylab("Inertia") +
-#xlab("Axis") +
 theme_bw()
 
 #Now let’s check our RDA model for significance using formal tests. We can assess both the full model and each constrained axis using F-statistics (Legendre et al, 2010). 
@@ -182,7 +193,7 @@ signif.full
 #time.taken <- end.time - start.time
 #time.taken
 
-signif.axis = readRDS("data/Nf/GxE/RDA/no_NC.RDA.signif_axes.rds")
+signif.axis = readRDS("data/Nf/GxE/RDA/no_NC.signif_axis.env_reduced.rds")
 signif.axis
 
 #########################
@@ -217,6 +228,7 @@ vif.cca(Y.rda)
 plot(Y.rda, scaling=3)
 plot(Y.rda, choices = c(1, 3), scaling=3)
 plot(Y.rda, choices = c(1, 4), scaling=3)
+plot(Y.rda, choices = c(1, 5), scaling=3)
 bioclim_var_names
 
 #We’ll use the loadings of the SNPs in the ordination space to determine which SNPs are candidates for local adaptation. The SNP loadings are stored as species in the RDA object. We’ll extract the SNP loadings from the three significant constrained axes:
@@ -261,16 +273,6 @@ length( intersect(names(cand2), names(cand4)) )
 length( intersect(names(cand3), names(cand4)) )
 # 5
 
-cand1.df = data.frame(
-    SNP_pos[sub("V", "", names(cand1)), ], #index the 
-
-cand1.df <- cbind.data.frame(axis = rep(1,times=length(cand1)), names(cand1), unname(cand1))
-cand2.df <- cbind.data.frame(rep(2,times=length(cand2)), names(cand2), unname(cand2))
-
-
-
-
-
 
 #from Capblanq, following pcadapt strategy
 rdadapt<-function(rda,K)
@@ -285,20 +287,27 @@ rdadapt<-function(rda,K)
     return(data.frame(p.values=reschi2test, q.values=q.values_rdadapt))
 }
 # env selected
-res_rdadapt<-rdadapt(Y.rda, 5)
+# 5 axes reduced
+# 2 axes selected (could make an arg for 4)
+# 4 axes full
+last_axis = 4
+
+res_rdadapt<-rdadapt(Y.rda, last_axis)
 
 #note that capblanq also uses q < 0.1
 which(res_rdadapt$q.values < 0.05) %>% length
 # full data set had 5560 at 0.05
-# selected vars has 2 at 0.05
+# selected vars has 0 at 0.05
 # non-correalted vars 5 axes has 3
 which(res_rdadapt$q.values < 0.1) %>% length
-# 36 at 0.1 with 4 axes
-# 441 with 2 axes (these axes explain the most var)
+# selected vars including duration infection 36 at 0.1 with 4 axes
+# selected vars excluding duration infection has 441 with 2 axes (these axes explain the most var)
 # signif axes still running
 # non-correalted vars 5 axes has 66
  
 # manhattan plot outliers
+qvalue_max = 0.1
+
 ggplot() +
 geom_point(
     aes(
@@ -309,91 +318,177 @@ geom_point(
 ) +
 geom_point(
     aes(
-        x=c(1:length(res_rdadapt[,1]))[which(res_rdadapt[,2] < 0.1)],
-        y = -log10(res_rdadapt[which(res_rdadapt[,2] < 0.1),1])
+        x=c(1:length(res_rdadapt[,1]))[which(res_rdadapt[,2] <qvalue_max)],
+        y = -log10(res_rdadapt[which(res_rdadapt[,2] < qvalue_max),1])
     ),
     col = "orange"
 ) +
 xlab("SNPs") + ylab("-log10(p.values)") +
 theme_bw()
 
+####################################
 # projection of outliers in rda space
-ggplot() +
-    geom_point(
-        aes(
-            x=Y.rda$CCA$v[,1], 
-            y=Y.rda$CCA$v[,2]
-        ), 
-        col = "gray86"
-    ) +
-    geom_point(
-        aes(
-            x=Y.rda$CCA$v[which(res_rdadapt[,2] < 0.1),1],
-            y=Y.rda$CCA$v[which(res_rdadapt[,2] < 0.1),2]
-        ), 
-        col = "orange"
-    ) +
-    geom_segment(
-        aes(
-            xend=Y.rda$CCA$biplot[,1]/20, 
-            yend=Y.rda$CCA$biplot[,2]/20, 
-            x=0, 
-            y=0
-        ),
-        colour="black", size=0.5, linetype=1,
-        arrow=arrow(length = unit(0.02, "npc"))
-    ) +
-    geom_text(
-        aes(
-            x=1.2*Y.rda$CCA$biplot[,1]/20, 
-            y=1.2*Y.rda$CCA$biplot[,3]/20, 
-            label = rownames(Y.rda$CCA$biplot)
-        )
-    ) +
-xlab("RDA 1") + ylab("RDA 2") +
-theme_bw() +
-theme(legend.position="none")
+# function for axis choice
+axis_choice_biplot = function(rda.obj = NULL, choices=c(1,2), res_rdadapt = res_rdadapt, qvalue_max = qvalue_max){
+    rda.scores = scores(rda.obj, choices = choices, scaling = "symmetric")
+    
+    ggplot() +
+        geom_point(
+            aes(
+                x=rda.scores$species[which(res_rdadapt$q.values >= qvalue_max),1], 
+                y=rda.scores$species[which(res_rdadapt$q.values >= qvalue_max),2]
+            ), 
+            col = "gray86"
+        ) +
+        geom_point(
+            aes(
+                x=rda.scores$species[which(res_rdadapt$q.values < qvalue_max),1], 
+                y=rda.scores$species[which(res_rdadapt$q.values < qvalue_max),2]
+            ), 
+            col = "orange"
+        ) +
+        geom_segment(
+            aes(
+                xend=rda.scores$biplot[,1], 
+                yend=rda.scores$biplot[,2], 
+                x=0, 
+                y=0
+            ),
+            colour="black", size=0.5, linetype=1,
+            arrow=arrow(length = unit(0.02, "npc"))
+        ) +
+        geom_text(
+            aes(
+                x=1.125*rda.scores$biplot[,1], 
+                y=1.125*rda.scores$biplot[,2], 
+                label = rownames(rda.scores$biplot)
+            )
+        ) +
+    xlab(paste("RDA",choices[1])) + ylab(paste("RDA",choices[2])) +
+    theme_bw() +
+    theme(legend.position="none")
+}
+###################################################################
 
+axis_choice_biplot(rda.obj = Y.rda, choices = c(1,2), res_rdadapt = res_rdadapt, qvalue_max = qvalue_max)
+axis_choice_biplot(rda.obj = Y.rda, choices = c(1,3), res_rdadapt = res_rdadapt, qvalue_max = qvalue_max)
+axis_choice_biplot(rda.obj = Y.rda, choices = c(1,4), res_rdadapt = res_rdadapt, qvalue_max = qvalue_max)
+axis_choice_biplot(rda.obj = Y.rda, choices = c(1,5), res_rdadapt = res_rdadapt, qvalue_max = qvalue_max)
 
-axis_choice_1=1
-axis_choice_2=2
+axis_choice_biplot(rda.obj = Y.rda, choices = c(2,3), res_rdadapt = res_rdadapt, qvalue_max = qvalue_max)
+axis_choice_biplot(rda.obj = Y.rda, choices = c(2,4), res_rdadapt = res_rdadapt, qvalue_max = qvalue_max)
+axis_choice_biplot(rda.obj = Y.rda, choices = c(2,5), res_rdadapt = res_rdadapt, qvalue_max = qvalue_max)
 
-ggplot() +
-    geom_point(
-        aes(
-            x=Y.rda$CCA$v[,1], 
-            y=Y.rda$CCA$v[,3]
-        ), 
-        col = "gray86"
-    ) +
-    geom_point(
-        aes(
-            x=Y.rda$CCA$v[which(res_rdadapt[,2] < 0.1),1],
-            y=Y.rda$CCA$v[which(res_rdadapt[,2] < 0.1),3]
-        ), 
-        col = "orange"
-    ) +
-    geom_segment(
-        aes(
-            xend=Y.rda$CCA$biplot[,1]/20, 
-            yend=Y.rda$CCA$biplot[,3]/20, 
-            x=0, 
-            y=0
-        ),
-        colour="black", size=0.5, linetype=1,
-        arrow=arrow(length = unit(0.02, "npc"))
-    ) +
-    geom_text(
-        aes(
-            x=1.2*Y.rda$CCA$biplot[,1]/20, 
-            y=1.2*Y.rda$CCA$biplot[,3]/20, 
-            label = rownames(Y.rda$CCA$biplot)
-        )
-    ) +
-xlab("RDA 1") + ylab("RDA 2") +
-theme_bw() +
-theme(legend.position="none")
+# plotting genome pos
+nrow(SNP_pos) == nrow(res_rdadapt)
+SNP_pos$rdadapt_qvalue = res_rdadapt$q.values
+SNP_pos$rdadapt_sig = ifelse(SNP_pos$rdadapt_qvalue < qvalue_max, "sig", "n.s.")
 
+ggplot(
+    SNP_pos %>% filter(length > 100000), 
+    aes(x = position/10^6, y = rdadapt_qvalue, color = rdadapt_sig)
+) +
+#facet_wrap(~scaffold) +
+facet_grid(. ~ scaffold, scales = "free_x", space='free') +
+geom_point(alpha = 0.5, size = 1) +
+scale_x_continuous(breaks = c(0, seq(from = 1, to = 6, by = 1)) ) +
+scale_y_continuous(
+    trans  = scales::compose_trans("log10", "reverse"),
+    labels = scales::label_log()
 
+) +
+scale_color_manual(values = c("grey", "black"), guide = "none") +
+my_gg_theme +
+labs(x = "Position (Mbp)", y = "") +
+theme(
+    strip.text.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+)
 
+##################################
+# using the correlation based approach from forester
+# with the SNPs identified using the prdadapt method
 
+dim(Y)
+Y.rdadapt_sig = Y[,which(res_rdadapt$q.values < qvalue_max)]
+SNP_pos.rdadapt_sig = SNP_pos[which(res_rdadapt$q.values < qvalue_max),]
+
+# cors with environment
+
+snp_env_cors = matrix(nrow = ncol(Y.rdadapt_sig), ncol =  ncol(env_mat))
+colnames(snp_env_cors) = colnames(env_mat)
+
+for (i in 1:ncol(Y.rdadapt_sig)) {
+  snp_env_cors[i,] <- apply(env_mat,2,function(x) cor(x,Y.rdadapt_sig[,i]))
+}
+
+SNP_pos.rdadapt_sig = cbind(SNP_pos.rdadapt_sig, snp_env_cors)
+head(SNP_pos.rdadapt_sig)
+
+SNP_pos.rdadapt_sig$max_env_cor = vector(mode = "numeric", length = nrow(SNP_pos.rdadapt_sig))
+SNP_pos.rdadapt_sig$max_env_predictor = vector(mode = "character", length = nrow(SNP_pos.rdadapt_sig))
+
+for (i in 1:nrow(SNP_pos.rdadapt_sig)) {
+  temp.cors <- snp_env_cors[i,]
+  SNP_pos.rdadapt_sig$max_env_predictor[i] = names(which.max(abs(temp.cors))) # gives the variable
+  SNP_pos.rdadapt_sig$max_env_cor[i] = temp.cors[which.max(abs(temp.cors))]       # gives the correlation
+}
+
+SNP_pos.rdadapt_sig[,c(1,2,17,18)]
+
+# cors with RDA axes
+last_axis = 4
+rda.axes = data.frame(scores(Y.rda, choices = 1:last_axis, display = "sites"))
+snp_axes_cors = matrix(nrow = ncol(Y.rdadapt_sig), ncol =  ncol(rda.axes))
+colnames(snp_axes_cors) = colnames(rda.axes)
+
+for (i in 1:ncol(Y.rdadapt_sig)) {
+  snp_axes_cors[i,] <- apply(rda.axes,2,function(x) cor(x,Y.rdadapt_sig[,i]))
+}
+
+SNP_pos.rdadapt_sig = cbind(SNP_pos.rdadapt_sig, snp_axes_cors)
+SNP_pos.rdadapt_sig$max_rdaAxis_cor = vector(mode = "numeric", length = nrow(SNP_pos.rdadapt_sig))
+SNP_pos.rdadapt_sig$max_rdaAxis_predictor = vector(mode = "character", length = nrow(SNP_pos.rdadapt_sig))
+
+for (i in 1:nrow(SNP_pos.rdadapt_sig)) {
+  temp.cors <- snp_axes_cors[i,]
+  SNP_pos.rdadapt_sig$max_rdaAxis_predictor[i] = names(which.max(abs(temp.cors))) # gives the variable
+  SNP_pos.rdadapt_sig$max_rdaAxis_cor[i] = temp.cors[which.max(abs(temp.cors))]       # gives the correlation
+}
+
+SNP_pos.rdadapt_sig[,c(1,2,3,17,18,24,25)]
+
+bioclim_var_names
+
+table(SNP_pos.rdadapt_sig$max_env_predictor)
+table(SNP_pos.rdadapt_sig$max_rdaAxis_predictor)
+
+# selected vars
+#             bio13              bio14              bio18              bio19               bio5               bio6               bio9 
+#                 5                  6                  8                  5                  6                  3                  2 
+# duration_infection 
+#                 1 
+
+#reduced vars
+#             bio14              bio18               bio5               bio8 duration_infection 
+#                61                  1                  1                  2                  1 
+
+#full vars
+#              bio1              bio10              bio11              bio12              bio13              bio14 
+#               151                457                 14                275                429                377 
+#             bio15              bio16              bio17              bio18              bio19               bio2 
+#                96                237                 45                165                 19                 88 
+#              bio3               bio4               bio5               bio6               bio7               bio8 
+#                41                 20                122                 43                131                115 
+#              bio9 duration_infection 
+#                26                242 
+                
+#write.csv(SNP_pos.rdadapt_sig, "data/Nf/GxE/RDA/no_NC.rdadapt_full_env.csv", quote = F, row.names = F)
+#write.csv(SNP_pos.rdadapt_sig, "data/Nf/GxE/RDA/no_NC.rdadapt_selected_env.csv", quote = F, row.names = F)
+#write.csv(SNP_pos.rdadapt_sig, "data/Nf/GxE/RDA/no_NC.rdadapt_reduced_env.csv", quote = F, row.names = F)
+    
+colnames(SNP_pos.rdadapt_sig)
+    SNP_pos.rdadapt_sig[,c(1,2,3,19,20)]
+    
+    
