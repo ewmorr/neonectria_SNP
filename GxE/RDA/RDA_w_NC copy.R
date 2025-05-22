@@ -5,14 +5,14 @@ library(GGally)
 source("library/ggplot_theme.txt")
 
 
-Y = read.table("data/Nf/GxE/RDA/Y.noNC.filteredMAC.tsv", header = F, sep = "\t")
-SNP_pos = read.csv("data/Nf/GxE/RDA/SNP_pos.noNC.filteredMAC.csv")
-sample_ids = read.table("data/Nf/GxE/RDA/sample_ids.noNC", header = F)
+Y = read.table("data/Nf/GxE/RDA/Y.wNC.filteredMAC.tsv", header = F, sep = "\t")
+SNP_pos = read.csv("data/Nf/GxE/RDA/SNP_pos.wNC.filteredMAC.csv")
+sample_ids = read.table("data/Nf/GxE/RDA/sample_ids.wNC", header = F)
 
 #read site metadata
 site.info = read.csv("data/sample_metadata/site_info.csv")
 site.bioclim = read.csv("data/sample_metadata/Nf.site_bioclim.csv")
-site.bioclim = site.bioclim %>% filter(state != "WV" & state != "NC")
+site.bioclim = site.bioclim %>% filter(state != "WV")
 site.bioclim
 source("data/sample_metadata/world_clim/bioclim_names.txt")
 bioclim_var_names
@@ -58,33 +58,31 @@ site_metadata.scaled = apply(
 varcors = cor(site_metadata.scaled)
 sort(rowSums(abs(varcors) > 0.7))
 bioclim_var_names
-# we can start with removing bio1, bio11, bio12 first
+# we can start with removing bio1 (MAT), warmest/coldest quarter (bio10, bio11), MAP (bio12) first
 # we keep bio6 for now (min temp coldest month) bc it may be biologically important
 site_metadata.scaled.reduced = site_metadata.scaled %>%
-    select(-bio1, -bio11, -bio12)
+    select(-bio1, -bio10, -bio11, -bio12)
 varcors = cor(site_metadata.scaled.reduced)
 sort(rowSums(abs(varcors) > 0.7))
 bioclim_var_names
-# lets remove the quarter estimates (wettest is one of the highest cors now)
+# lets remove the precip quarter estimates (bio16,17)
 # these are repettive with the -est month measures
-# remove bio16, bio17, bio10
+# remove bio16, bio17
 site_metadata.scaled.reduced = site_metadata.scaled.reduced %>%
-    select(-bio16, -bio17, -bio10)
+    select(-bio16, -bio17)
 varcors = cor(site_metadata.scaled.reduced)
 sort(rowSums(abs(varcors) > 0.7))
 bioclim_var_names[names(rowSums(varcors > 0.7))]
-# bio3 and 4 correlted with each other
-# lets go with isothermaility (bio3)
-# bio 5 with bio 6 only (0.7)
-# bio 7 with bio 3,4,6,9
-# let's go with -bio6
-site_metadata.scaled.reduced = site_metadata.scaled.reduced %>%
-    select(-bio6) 
-varcors = cor(site_metadata.scaled.reduced)
-sort(rowSums(abs(varcors) > 0.7))
+# remove temp seasonality (bio4), bio9
 
 site_metadata.scaled.reduced = site_metadata.scaled.reduced %>%
-    select(-bio4, -bio7) 
+    select(-bio4, -bio9) 
+varcors = cor(site_metadata.scaled.reduced)
+sort(rowSums(abs(varcors) > 0.7))
+bioclim_var_names[names(rowSums(varcors > 0.7))]
+
+site_metadata.scaled.reduced = site_metadata.scaled.reduced %>%
+    select(-bio7) 
 varcors = cor(site_metadata.scaled.reduced)
 sort(rowSums(abs(varcors) > 0.7))
 
@@ -93,14 +91,12 @@ site_metadata.scaled.reduced = site_metadata.scaled.reduced %>%
 varcors = cor(site_metadata.scaled.reduced)
 sort(rowSums(abs(varcors) > 0.7))
 
-# last to deal with is precip seasonality versus precip direst month
-# we also have precip wettest month included and these are easier to interpret 
-# than how precip is distrbuted throughout the year
-# we exclude bio 15
 site_metadata.scaled.reduced = site_metadata.scaled.reduced %>%
-    select(-bio15) 
+    select(-bio13, -bio14) 
 varcors = cor(site_metadata.scaled.reduced)
 sort(rowSums(abs(varcors) > 0.7))
+bioclim_var_names[names(rowSums(varcors > 0.7))]
+
 
 
 p1 = ggpairs(
@@ -111,11 +107,12 @@ p1 = ggpairs(
     theme(
         axis.text.x = element_text(angle = 55, hjust = 1)
     )
+p1
 
 bioclim_var_names[names(rowSums(varcors > 0.7))]
 
 
-pdf("figures/GxE/RDA/env_vars/pairs_cor.no_NC.pdf", width = 16, height = 16)
+pdf("figures/GxE/RDA/env_vars/pairs_cor.w_NC.pdf", width = 16, height = 16)
 p1
 dev.off()
 
@@ -145,7 +142,7 @@ env_mat = X[,selected_env]
 Y.rda <- rda(Y~ ., data=env_mat, scale=T)
 Y.rda
 
-# saveRDS(Y.rda, "data/Nf/GxE/RDA/no_NC.RDA_env_selected.rds")
+saveRDS(Y.rda, "data/Nf/GxE/RDA/w_NC.RDA_env_selected.rds")
 
 RsquareAdj(Y.rda)
 
@@ -161,7 +158,7 @@ size = 1.5, color="darkgrey") +
 geom_point(aes(x=c(1:length(Y.rda$CCA$eig)), y=as.vector(Y.rda$CCA$eig)/sum(Y.rda$CCA$eig)*100), size = 3,
 color="darkgrey") +
 scale_x_continuous(name = "Ordination axes", breaks=c(1:10)) +
-ylab("Inertia") +
+ylab("% variance") +
 theme_bw()
 
 #Now let’s check our RDA model for significance using formal tests. We can assess both the full model and each constrained axis using F-statistics (Legendre et al, 2010). 
@@ -193,17 +190,8 @@ signif.full
 #time.taken <- end.time - start.time
 #time.taken
 
-signif.axis = readRDS("data/Nf/GxE/RDA/no_NC.signif_axis.env_reduced.rds")
+signif.axis = readRDS("data/Nf/GxE/RDA/w_NC.signif_axis.env_reduced.rds")
 signif.axis
-plot(signif.axis$Variance[1:length(signif.axis$Variance)-1])
-# 2 sig third marginal
-signif.axis = readRDS("data/Nf/GxE/RDA/no_NC.signif_axis.env_selected.rds")
-signif.axis
-plot(signif.axis$Variance[1:length(signif.axis$Variance)-1])
-# 2
-signif.axis = readRDS("data/Nf/GxE/RDA/no_NC.signif_axis.env_full.rds")
-signif.axis
-# 4
 
 #########################
 
@@ -296,8 +284,8 @@ rdadapt<-function(rda,K)
     return(data.frame(p.values=reschi2test, q.values=q.values_rdadapt))
 }
 # env selected
-# 5 axes reduced (the signif test says 2 sig three mrg)
-# 4 axes selected (signif test says 2)
+# 5 axes reduced
+# 2 axes selected (could make an arg for 4)
 # 4 axes full
 last_axis = 4
 
@@ -307,15 +295,13 @@ res_rdadapt<-rdadapt(Y.rda, last_axis)
 which(res_rdadapt$q.values < 0.05) %>% length
 # full data set had 5560 at 0.05
 # selected vars has 0 at 0.05
-# reduced (non-correalted) vars 5 axes has 3
-# reduced 3 axes has 4
+# non-correalted vars 5 axes has 3
 which(res_rdadapt$q.values < 0.1) %>% length
 # selected vars including duration infection 36 at 0.1 with 4 axes
 # selected vars excluding duration infection has 441 with 2 axes (these axes explain the most var)
 # signif axes still running
 # non-correalted vars 5 axes has 66
- # non-correalted vars 3 axes has 4
- # 
+ 
 # manhattan plot outliers
 qvalue_max = 0.1
 
@@ -495,9 +481,9 @@ table(SNP_pos.rdadapt_sig$max_rdaAxis_predictor)
 #              bio9 duration_infection 
 #                26                242 
                 
-#write.csv(SNP_pos.rdadapt_sig, "data/Nf/GxE/RDA/no_NC.rdadapt_full_env.csv", quote = F, row.names = F)
-#write.csv(SNP_pos.rdadapt_sig, "data/Nf/GxE/RDA/no_NC.rdadapt_selected_env.csv", quote = F, row.names = F)
-#write.csv(SNP_pos.rdadapt_sig, "data/Nf/GxE/RDA/no_NC.rdadapt_reduced_env.csv", quote = F, row.names = F)
+#write.csv(SNP_pos.rdadapt_sig, "data/Nf/GxE/RDA/w_NC.rdadapt_full_env.csv", quote = F, row.names = F)
+#write.csv(SNP_pos.rdadapt_sig, "data/Nf/GxE/RDA/w_NC.rdadapt_selected_env.csv", quote = F, row.names = F)
+#write.csv(SNP_pos.rdadapt_sig, "data/Nf/GxE/RDA/w_NC.rdadapt_reduced_env.csv", quote = F, row.names = F)
     
 colnames(SNP_pos.rdadapt_sig)
     SNP_pos.rdadapt_sig[,c(1,2,3,19,20)]
