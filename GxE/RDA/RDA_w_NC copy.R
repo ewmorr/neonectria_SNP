@@ -161,6 +161,10 @@ scale_x_continuous(name = "Ordination axes", breaks=c(1:10)) +
 ylab("% variance") +
 theme_bw()
 
+# reduced = 3 (but not a strong decline in var explained)
+# selected = 3 (could make an arg for 4, but it's quite a bit less)
+# full 5
+
 #Now let’s check our RDA model for significance using formal tests. We can assess both the full model and each constrained axis using F-statistics (Legendre et al, 2010). 
 signif.full <- anova.cca(Y.rda, parallel=getOption("mc.cores")) # default is permutation=999
 signif.full
@@ -169,10 +173,10 @@ signif.full
 #Permutation: free
 #Number of permutations: 999
 #
-#Model: rda(formula = Y ~ bio2 + bio3 + bio5 + bio8 + bio9 + bio13 + bio14 + bio18 + duration_infection, data = X[, rownames(varcors)], scale = T)
-#         Df Variance     F Pr(>F)    
-#Model     9    13959 1.215  0.001 ***
-#Residual 82   104678                 
+#Model: rda(formula = Y ~ bio2 + bio3 + bio5 + bio6 + bio8 + bio15 + bio18 + duration_infection, data = env_mat, scale = T)
+#         Df Variance      F Pr(>F)    
+#Model     8    11673 1.2735  0.001 ***
+#Residual 89   101978                  
 #---
 #Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
@@ -192,6 +196,13 @@ signif.full
 
 signif.axis = readRDS("data/Nf/GxE/RDA/w_NC.signif_axis.env_reduced.rds")
 signif.axis
+# 3 sig
+signif.axis = readRDS("data/Nf/GxE/RDA/w_NC.signif_axis.env_selected.rds")
+signif.axis
+# 3 sig
+signif.axis = readRDS("data/Nf/GxE/RDA/w_NC.signif_axis.env_full.rds")
+signif.axis
+# 3 sig
 
 #########################
 
@@ -284,10 +295,10 @@ rdadapt<-function(rda,K)
     return(data.frame(p.values=reschi2test, q.values=q.values_rdadapt))
 }
 # env selected
-# 5 axes reduced
-# 2 axes selected (could make an arg for 4)
-# 4 axes full
-last_axis = 4
+# 3 axes reduced
+# 3 axes selected 
+# 3 axes full (could make an arg for 5)
+last_axis = 3
 
 res_rdadapt<-rdadapt(Y.rda, last_axis)
 
@@ -295,12 +306,12 @@ res_rdadapt<-rdadapt(Y.rda, last_axis)
 which(res_rdadapt$q.values < 0.05) %>% length
 # full data set had 5560 at 0.05
 # selected vars has 0 at 0.05
-# non-correalted vars 5 axes has 3
+# non-correalted vars 3 axes has 1355
 which(res_rdadapt$q.values < 0.1) %>% length
 # selected vars including duration infection 36 at 0.1 with 4 axes
 # selected vars excluding duration infection has 441 with 2 axes (these axes explain the most var)
 # signif axes still running
-# non-correalted vars 5 axes has 66
+# non-correalted vars 3 axes has 1853
  
 # manhattan plot outliers
 qvalue_max = 0.1
@@ -432,10 +443,11 @@ for (i in 1:nrow(SNP_pos.rdadapt_sig)) {
   SNP_pos.rdadapt_sig$max_env_cor[i] = temp.cors[which.max(abs(temp.cors))]       # gives the correlation
 }
 
-SNP_pos.rdadapt_sig[,c(1,2,17,18)]
+last_col = ncol(SNP_pos.rdadapt_sig)
+SNP_pos.rdadapt_sig[,c(1,2,last_col-1,last_col)]
 
 # cors with RDA axes
-last_axis = 4
+last_axis = 3
 rda.axes = data.frame(scores(Y.rda, choices = 1:last_axis, display = "sites"))
 snp_axes_cors = matrix(nrow = ncol(Y.rdadapt_sig), ncol =  ncol(rda.axes))
 colnames(snp_axes_cors) = colnames(rda.axes)
@@ -454,7 +466,8 @@ for (i in 1:nrow(SNP_pos.rdadapt_sig)) {
   SNP_pos.rdadapt_sig$max_rdaAxis_cor[i] = temp.cors[which.max(abs(temp.cors))]       # gives the correlation
 }
 
-SNP_pos.rdadapt_sig[,c(1,2,3,17,18,24,25)]
+new_last_col = ncol(SNP_pos.rdadapt_sig)
+SNP_pos.rdadapt_sig[,c(1,2,3,last_col-1,last_col,new_last_col-1,new_last_col)]
 
 bioclim_var_names
 
