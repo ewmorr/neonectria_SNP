@@ -142,7 +142,7 @@ env_mat = X[,selected_env]
 Y.rda <- rda(Y~ ., data=env_mat, scale=T)
 Y.rda
 
-saveRDS(Y.rda, "data/Nf/GxE/RDA/w_NC.RDA_env_selected.rds")
+#saveRDS(Y.rda, "data/Nf/GxE/RDA/w_NC.RDA_env_selected.rds")
 
 RsquareAdj(Y.rda)
 
@@ -199,10 +199,10 @@ signif.axis
 # 3 sig
 signif.axis = readRDS("data/Nf/GxE/RDA/w_NC.signif_axis.env_selected.rds")
 signif.axis
-# 3 sig
+#  sig
 signif.axis = readRDS("data/Nf/GxE/RDA/w_NC.signif_axis.env_full.rds")
 signif.axis
-# 3 sig
+#  sig
 
 #########################
 
@@ -298,19 +298,18 @@ rdadapt<-function(rda,K)
 # 3 axes reduced
 # 3 axes selected 
 # 3 axes full (could make an arg for 5)
-last_axis = 3
+last_axis = 5
 
 res_rdadapt<-rdadapt(Y.rda, last_axis)
 
 #note that capblanq also uses q < 0.1
 which(res_rdadapt$q.values < 0.05) %>% length
-# full data set had 5560 at 0.05
-# selected vars has 0 at 0.05
+# full data set 5 axes had 3131 at 0.05
+# selected vars has 1403 at 0.05
 # non-correalted vars 3 axes has 1355
 which(res_rdadapt$q.values < 0.1) %>% length
-# selected vars including duration infection 36 at 0.1 with 4 axes
-# selected vars excluding duration infection has 441 with 2 axes (these axes explain the most var)
-# signif axes still running
+# selected vars including duration infection 2039 at 0.1 with 3 axes
+# full vars 5 axes 4551
 # non-correalted vars 3 axes has 1853
  
 # manhattan plot outliers
@@ -447,7 +446,7 @@ last_col = ncol(SNP_pos.rdadapt_sig)
 SNP_pos.rdadapt_sig[,c(1,2,last_col-1,last_col)]
 
 # cors with RDA axes
-last_axis = 3
+#last_axis = 5
 rda.axes = data.frame(scores(Y.rda, choices = 1:last_axis, display = "sites"))
 snp_axes_cors = matrix(nrow = ncol(Y.rdadapt_sig), ncol =  ncol(rda.axes))
 colnames(snp_axes_cors) = colnames(rda.axes)

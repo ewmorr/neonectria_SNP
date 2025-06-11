@@ -449,7 +449,7 @@ for (i in 1:nrow(SNP_pos.rdadapt_sig)) {
 SNP_pos.rdadapt_sig[,c(1,2,17,18)]
 
 # cors with RDA axes
-last_axis = 4
+last_axis = 5
 rda.axes = data.frame(scores(Y.rda, choices = 1:last_axis, display = "sites"))
 snp_axes_cors = matrix(nrow = ncol(Y.rdadapt_sig), ncol =  ncol(rda.axes))
 colnames(snp_axes_cors) = colnames(rda.axes)

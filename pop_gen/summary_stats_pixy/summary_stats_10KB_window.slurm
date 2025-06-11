@@ -14,7 +14,7 @@ cd ~/Nf_pixy/
 
 pixy --stats pi fst dxy \
     --vcf FINAL_invariant.nuclear.vcf.gz \
-    --populations Nf.pixy_pops.tsv \
+    --populations Nf.single_pixy_pop.tsv \
     --window_size 10000 \
     --n_cores 12
 
