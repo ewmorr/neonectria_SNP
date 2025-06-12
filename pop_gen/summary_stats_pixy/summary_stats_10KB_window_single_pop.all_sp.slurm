@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=12
+#SBATCH --cpus-per-task=24
 #SBATCH --job-name="pixy"
 #SBATCH --output=pixy.out
 #SBATCH --partition=shared
@@ -12,13 +12,13 @@ conda activate pixy2
 
 outdir=window_10kb_single_pop
 
-indir=$HOME/Nf_pixy
-pixy --stats pi watterson_theta tajima_d \
-    --vcf $indir/FINAL_invariant.nuclear.vcf.gz \
-    --populations $indir/Nf.single_pixy_pop.tsv \
-    --window_size 10000 \
-    --output_folder $indir/$outdir \
-    --n_cores 12
+#indir=$HOME/Nf_pixy
+#pixy --stats pi watterson_theta tajima_d \
+#    --vcf $indir/FINAL_invariant.nuclear.vcf.gz \
+#    --populations $indir/Nf.single_pixy_pop.tsv \
+#    --window_size 10000 \
+#    --output_folder $indir/$outdir \
+#    --n_cores 24
 
 indir=$HOME/Nd_pixy
 pixy --stats pi watterson_theta tajima_d \
@@ -26,7 +26,7 @@ pixy --stats pi watterson_theta tajima_d \
     --populations $indir/Nd.single_pixy_pop.tsv \
     --window_size 10000 \
     --output_folder $indir/$outdir \
-    --n_cores 12
+    --n_cores 24
 
 indir=$HOME/Nc_pixy
 pixy --stats pi watterson_theta tajima_d \
@@ -34,5 +34,5 @@ pixy --stats pi watterson_theta tajima_d \
     --populations $indir/Nc.single_pixy_pop.tsv \
     --window_size 10000 \
     --output_folder $indir/$outdir \
-    --n_cores 12
+    --n_cores 24
 
