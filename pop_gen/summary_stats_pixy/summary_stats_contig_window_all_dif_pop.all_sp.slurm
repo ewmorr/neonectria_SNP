@@ -7,7 +7,7 @@
 #SBATCH --exclude=node105,node106,node107,node108,node117,node118,node119,node167
 
 module purge
-module load anaconda/colsa
+module --ignore_cache load "anaconda/colsa"
 conda activate pixy2
 
 outdir=contig_all_dif_pop
