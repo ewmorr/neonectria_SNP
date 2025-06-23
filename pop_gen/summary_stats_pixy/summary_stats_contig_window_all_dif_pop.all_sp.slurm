@@ -4,7 +4,7 @@
 #SBATCH --job-name="pixy"
 #SBATCH --output=pixy.out
 #SBATCH --partition=shared
-#SBATCH --exclude=node105,node106,node107,node108,node117,node118,node119,node167
+#SBATCH --exclude=node117,node118
 
 module purge
 module --ignore_cache load "anaconda/colsa"
