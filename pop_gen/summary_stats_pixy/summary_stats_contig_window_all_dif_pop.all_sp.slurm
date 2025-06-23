@@ -4,10 +4,10 @@
 #SBATCH --job-name="pixy"
 #SBATCH --output=pixy.out
 #SBATCH --partition=shared
-#SBATCH --exclude=node117,node118
+##SBATCH --exclude=node117,node118
 
 module purge
-module --ignore_cache load "anaconda/colsa"
+module load anaconda/colsa
 conda activate pixy2
 
 outdir=contig_all_dif_pop
