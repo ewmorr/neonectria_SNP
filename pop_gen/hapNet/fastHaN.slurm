@@ -10,7 +10,7 @@ module purge
 
 
 cd ~/Nd_hapNet
-~/repo/fastHaN/fastHaN_linux original_tcs -i FINAL_snp.IBD_analyses.min1.phy -t 24 -o tcs_out
+~/repo/fastHaN/fastHaN_linux mjn -i ~/Nd_hapNet/FINAL_snp.IBD_analyses.min1.phy -t 24 -o ~/Nd_hapNet/tcs_out
 
 cd ~/Nf_hapNet
-~/repo/fastHaN/fastHaN_linux original_tcs -i FINAL_snp.IBD_analyses.min1.phy -t 24 -o tcs_out
+~/repo/fastHaN/fastHaN_linux mjn -i ~/Nf_hapNet/FINAL_snp.IBD_analyses.min1.phy -t 24 -o ~/Nf_hapNet/tcs_out
