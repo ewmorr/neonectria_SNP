@@ -141,7 +141,7 @@ The above run with repeated calls in the iterative filtering along with individu
 3. apply iterative missing data filter, 3 rounds of 95th percentile lmiss and 99th percentile imiss 
 4. Filter max of 25% missing data per locus and 15% missing data per individual (note the final hard filters are based on the ditribution of missing data and are close to the 95th and 99th percentile after the three rounds above)
 5. Depending on analysis
-    a. for ML phylogeny and genetic distance analysis, use the table as is (e.g., isolation by distance)
+    a. for ML phylogeny, haplotype network, and genetic distance analysis, use the table as is (e.g., isolation by distance)
     b. for nucleotide diversity metrics, use variant plus invariant sites table, apply 1. and 2 (still need to split by library and then apply the same mean+SD filtering level as assigned above, becuase the invariant sites could skew but we care most about the variants); filter based on the full list of SNP and sites derived from 3. and 4.
     c. analyses with no singletons (a. plus MAC>=2 filter)
     d. for PCA (for pop structure, not LMEA GWAS) use c + LD filter (assumes independent SNPs)

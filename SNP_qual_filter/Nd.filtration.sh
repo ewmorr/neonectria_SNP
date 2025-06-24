@@ -392,6 +392,12 @@ bcftools view rm_dups/FINAL_invariant.nuclear.vcf.gz | grep -v '^#' | wc -l
 # this is kind of low... Nf is only about 1M off of the full genome size. Will want to look at calcs with the correction based on full genome size and the number of invariant sites as well
 bcftools view rm_dups/FINAL_snp.IBD_analyses.vcf.gz | grep -v '^#' | wc -l
 #1599656
+bcftools view rm_dups/FINAL_snp.IBD_analyses.vcf.gz > rm_dups/FINAL_snp.IBD_analyses.vcf
+python ~/repo/vcf2phylip/vcf2phylip.py --input rm_dups/FINAL_snp.IBD_analyses.vcf -m 1
+# Total of genotypes processed: 1599656
+# excluded for being MNPs: 186357
+# SNPs that passed the filters: 1413299
+rm rm_dups/FINAL_snp.IBD_analyses.vcf
 
 #rm singletons
 cd rm_dups

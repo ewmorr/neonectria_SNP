@@ -744,11 +744,16 @@ gunzip -c rm_dups/FINAL_invariant.nuclear.vcf.gz | grep -m 1  "^#CHROM" | grep -
 gunzip -c rm_dups/FINAL_snp.IBD_analyses.vcf.gz | grep -m 1  "^#CHROM" | grep -o "NG" | wc -l
 #115
 bcftools view rm_dups/FINAL_invariant.nuclear.vcf.gz | grep -v '^#' | wc -l
-#41018940
 # 41040857
 bcftools view rm_dups/FINAL_snp.IBD_analyses.vcf.gz | grep -v '^#' | wc -l
 #1116141
-
+bcftools view rm_dups/FINAL_snp.IBD_analyses.vcf.gz > rm_dups/FINAL_snp.IBD_analyses.vcf
+python ~/repo/vcf2phylip/vcf2phylip.py --input rm_dups/FINAL_snp.IBD_analyses.vcf -m 1
+#Total of genotypes processed: 1116141
+#Genotypes excluded because they exceeded the amount of missing data allowed: 0
+#Genotypes that passed missing data filter but were excluded for being MNPs (multiple nuc poly): 119050
+#SNPs that passed the filters: 997091
+rm rm_dups/FINAL_snp.IBD_analyses.vcf
 
 #rm singletons
 cd rm_dups

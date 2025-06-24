@@ -274,6 +274,13 @@ bcftools view FINAL_invariant.nuclear.vcf.gz | grep -v '^#' | wc -l
 #40630626
 bcftools view FINAL_snp.IBD_analyses.vcf.gz | grep -v '^#' | wc -l
 #416775
+bcftools view FINAL_snp.IBD_analyses.vcf.gz > FINAL_snp.IBD_analyses.vcf
+python ~/repo/vcf2phylip/vcf2phylip.py --input FINAL_snp.IBD_analyses.vcf -m 1
+#Total of genotypes processed: 416775
+#Genotypes excluded because they exceeded the amount of missing data allowed: 0
+#Genotypes that passed missing data filter but were excluded for being MNPs: 37992
+#SNPs that passed the filters: 378783
+rm FINAL_snp.IBD_analyses.vcf
 
 #rm singletons
 vcftools --gzvcf FINAL_snp.IBD_analyses.vcf.gz --mac 2 --recode --out FINAL_snp.mac_ge2
