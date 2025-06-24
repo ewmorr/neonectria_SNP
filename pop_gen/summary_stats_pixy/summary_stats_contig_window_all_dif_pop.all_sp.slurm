@@ -12,19 +12,19 @@ conda activate pixy2
 
 outdir=contig_all_dif_pop
 
-indir=$HOME/Nf_pixy
-pixy --stats dxy \
-    --vcf $indir/FINAL_invariant.nuclear.vcf.gz \
-    --populations $indir/Nf.all_dif_pixy_pop.tsv \
-    --bed_file contigs.bed \
-    --output_folder $indir/$outdir \
-    --n_cores 24
+#indir=$HOME/Nf_pixy
+#pixy --stats dxy \
+#    --vcf $indir/FINAL_invariant.nuclear.vcf.gz \
+#    --populations $indir/Nf.all_dif_pixy_pop.tsv \
+#    --bed_file $indir/contigs.bed \
+#    --output_folder $indir/$outdir \
+#    --n_cores 24
 
 indir=$HOME/Nd_pixy
 pixy --stats dxy \
     --vcf $indir/FINAL_invariant.nuclear.vcf.gz \
     --populations $indir/Nd.all_dif_pixy_pop.tsv \
-    --bed_file contigs.bed \
+    --bed_file $indir/contigs.bed \
     --output_folder $indir/$outdir \
     --n_cores 24
 
@@ -32,7 +32,7 @@ indir=$HOME/Nc_pixy
 pixy --stats dxy \
     --vcf $indir/FINAL_invariant.nuclear.vcf.gz \
     --populations $indir/Nc.all_dif_pixy_pop.tsv \
-    --bed_file contigs.bed \
+    --bed_file $indir/contigs.bed \
     --output_folder $indir/$outdir \
     --n_cores 24
 

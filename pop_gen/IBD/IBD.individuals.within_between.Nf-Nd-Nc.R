@@ -142,7 +142,7 @@ Nc.Dgen.long$comp = ifelse(Nc.Dgeo.long$value == 0, "within", "between")
 # Nf L741 FINAL_invariant.nuclear.vcf.gz = 41018940
 # Nd L391 FINAL_invariant.nuclear.vcf.gz = 38535154
 # Nc L274 FINAL_invariant.nuclear.vcf.gz = 40630626 bp
-Nf.Dgen.long$difsPerKb = Nf.Dgen.long$value / (41018940 / 1000)
+Nf.Dgen.long$difsPerKb = Nf.Dgen.long$value / (41040857 / 1000)
 Nd.Dgen.long$difsPerKb = Nd.Dgen.long$value / (38535154 / 1000)
 Nc.Dgen.long$difsPerKb = Nc.Dgen.long$value / (40630626 / 1000)
 
@@ -370,10 +370,10 @@ boot_df
 # with early
 # 
 #  spp    comp   med.boot  lower.CI   upper.CI
-#1  Nf  within  3.5613070  3.471278  3.6436189
+#1  Nf  within  3.5612472  3.470086  3.6411180
 #2  Nd  within  9.2234957  9.024972  9.3784264
 #3  Nc  within  0.7778024  0.768002  0.7964116
-#4  Nf between  4.0270433  4.019031  4.0349617
+#4  Nf between  4.0248340  4.016795  4.0328803
 #5  Nd between  9.1931483  9.132322  9.2393101
 #6  Nc between 13.3657376 12.642678 13.8749629
 

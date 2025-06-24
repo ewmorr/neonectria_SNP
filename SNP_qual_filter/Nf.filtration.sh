@@ -667,7 +667,12 @@ bcftools view all_libs.invariant.DP-GQ_filtered.bcf | grep -v "^#" | wc -l
 
 #count hits to mt genome
 bcftools view FINAL_invariant.bcf | grep "^tig00000405_pilon"  | wc -l
-#7956 remove these
+#8338 remove these
+bcftools view FINAL_invariant.bcf | grep "^tig00000405_pilon"  | grep ":RGQ" | wc -l
+# 8262
+bcftools view FINAL_invariant.bcf | grep "^tig00000405_pilon"  | grep ":GQ" | wc -l
+# 76
+
 bcftools index FINAL_invariant.bcf
 bcftools view FINAL_invariant.bcf | grep -v "^tig00000405_pilon" | bcftools view -Ob -o FINAL_invariant.nuclear.bcf
 
@@ -740,6 +745,7 @@ gunzip -c rm_dups/FINAL_snp.IBD_analyses.vcf.gz | grep -m 1  "^#CHROM" | grep -o
 #115
 bcftools view rm_dups/FINAL_invariant.nuclear.vcf.gz | grep -v '^#' | wc -l
 #41018940
+# 41040857
 bcftools view rm_dups/FINAL_snp.IBD_analyses.vcf.gz | grep -v '^#' | wc -l
 #1116141
 

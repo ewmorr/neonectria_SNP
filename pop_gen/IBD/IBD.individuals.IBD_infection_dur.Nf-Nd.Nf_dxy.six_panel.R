@@ -25,7 +25,7 @@ head(Dgen.Nd)
 sum(is.na(Dgen.Nd))
 
 #convert to nt difs per kb
-Dgen.Nf = Dgen.Nf / (41018940 / 1000)
+Dgen.Nf = Dgen.Nf / (41040857 / 1000)
 sum(is.na(Dgen.Nf))
 Dgen.Nd = Dgen.Nd / (38535154 / 1000)
 sum(is.na(Dgen.Nd))
@@ -148,8 +148,8 @@ mantel(Dgen.Nd, Nd.Dgeo, na.rm = T)
 #Mantel statistic r: -0.09242
 #Significance: 0.788
 #with early
-#Mantel statistic r: -0.1145 
-#      Significance: 0.89 
+#Mantel statistic r: -0.1205 
+#      Significance: 0.904
 
 mantel(Dgen.Nf, log(Nf.Dgeo), na.rm = T)
 #Mantel statistic r: 0.2304
@@ -170,8 +170,8 @@ mantel(Dgen.Nd, Nd.Ddur, na.rm = T)
 #Mantel statistic r: 0.01163 
 #Significance: 0.454 
 ##with early
-#Mantel statistic r: 0.02412 
-#      Significance: 0.365 
+#Mantel statistic r: 0.02946 
+#      Significance: 0.337 
 
 #########################
 #long format for plotting
