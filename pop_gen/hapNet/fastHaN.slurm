@@ -4,6 +4,7 @@
 #SBATCH --job-name="fastHaN"
 #SBATCH --output=fastHaN.out
 #SBATCH --partition=shared
+#SBATCH --mem-512G
 #SBATCH --exclude=node117,node118
 
 module purge
